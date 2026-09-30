@@ -16,6 +16,7 @@ export default function Workspace({ email }) {
   const router = useRouter();
   const supabase = useRef(createClient()).current;
   const fileInput = useRef(null);
+  const detailsRef = useRef(null);
 
   const [images, setImages] = useState([]); // { blob, name, url }
   const [index, setIndex] = useState(0);
@@ -279,6 +280,26 @@ export default function Workspace({ email }) {
 
   const statusText = { preparing: "Preparing files…", uploading: "Uploading securely…", analyzing: "Analyzing… this can take up to a minute." }[status];
   const canAnalyze = images.length > 0 && images.every((i) => i.blob) && !busy;
+  const hasImages = images.length > 0;
+  const viewingSaved = images.some((i) => !i.blob);
+  const detailsFilled = [
+    patient.age !== "",
+    patient.sex !== "",
+    patient.symptoms.trim() !== "",
+    patient.history.trim() !== "",
+    patient.question.trim() !== "",
+  ].filter(Boolean).length;
+
+  function goToDetails() {
+    const node = detailsRef.current;
+    if (!node) return;
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    node.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
+    // Only pop the keyboard on devices that have a real pointer; on phones it would cover the form.
+    if (window.matchMedia("(hover: hover)").matches) {
+      setTimeout(() => node.querySelector("input, select, textarea")?.focus({ preventScroll: true }), 450);
+    }
+  }
 
   return (
     <div className="min-h-screen">
@@ -296,30 +317,28 @@ export default function Workspace({ email }) {
           <Viewer images={images} index={index} onSelect={setIndex} />
 
           <div className="card p-4 space-y-4">
-            <div className="flex flex-wrap gap-2">
-              <button type="button" className="btn-primary" disabled={busy} onClick={() => fileInput.current?.click()}>
-                Upload image or PDF
-              </button>
-              <button type="button" className="btn-ghost" disabled={busy} onClick={() => setShowCamera(true)}>
-                Use camera
-              </button>
-              {images.length > 0 && (
-                <button type="button" className="btn-ghost" disabled={busy} onClick={reset}>
-                  New scan
+            <input
+              ref={fileInput}
+              type="file"
+              multiple
+              accept="image/*,.heic,.heif,application/pdf,.pdf"
+              className="hidden"
+              onChange={(e) => {
+                addFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+
+            {!hasImages && (
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className="btn-primary" disabled={busy} onClick={() => fileInput.current?.click()}>
+                  Upload image or PDF
                 </button>
-              )}
-              <input
-                ref={fileInput}
-                type="file"
-                multiple
-                accept="image/*,.heic,.heif,application/pdf,.pdf"
-                className="hidden"
-                onChange={(e) => {
-                  addFiles(e.target.files);
-                  e.target.value = "";
-                }}
-              />
-            </div>
+                <button type="button" className="btn-ghost" disabled={busy} onClick={() => setShowCamera(true)}>
+                  Use camera
+                </button>
+              </div>
+            )}
 
             {messages.map((m, i) => (
               <p key={i} className="text-sm text-amber-800">{m}</p>
@@ -340,10 +359,34 @@ export default function Workspace({ email }) {
               </ul>
             )}
 
-            <fieldset className="space-y-3 rounded-xl border border-line p-3">
+            {hasImages && !viewingSaved && !busy && (
+              <button
+                type="button"
+                onClick={goToDetails}
+                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3 text-left text-navy"
+              >
+                <span className="text-sm">
+                  <strong>Image added.</strong> Next, add a few patient details.
+                  <span className="mt-0.5 block text-xs text-muted">They help the AI write a more useful report.</span>
+                </span>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+                  <path d="M12 5v14M6 13l6 6 6-6" />
+                </svg>
+              </button>
+            )}
+
+            <fieldset ref={detailsRef} className="scroll-mt-4 space-y-3 rounded-xl border border-line p-3">
               <legend className="px-1 text-sm font-semibold">Patient details</legend>
+              <div className="rounded-lg bg-bg p-3 text-sm text-navy/90">
+                <p className="font-semibold">Why we ask for this</p>
+                <p className="mt-1">
+                  The AI reads the film together with what you know about the patient. Age, symptoms and history change
+                  which findings matter, and a clear clinical question tells it what you need to decide. With more detail
+                  the report is more specific and more useful. With none, it stays general. Everything here is optional.
+                </p>
+              </div>
               <p className="text-xs text-muted">
-                Do not enter names, phone numbers or addresses.
+                Details added: {detailsFilled} of 5. Do not enter names, phone numbers or addresses.
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <label className="block text-sm">
@@ -386,6 +429,24 @@ export default function Workspace({ email }) {
               {busy ? statusText : "Analyze"}
             </button>
             {error && !modalOpen && <p role="alert" className="text-sm text-red-700">{error}</p>}
+
+            {hasImages && (
+              <div className="flex flex-wrap gap-2 border-t border-line pt-4">
+                {!viewingSaved && (
+                  <>
+                    <button type="button" className="btn-ghost" disabled={busy} onClick={() => fileInput.current?.click()}>
+                      Add another image
+                    </button>
+                    <button type="button" className="btn-ghost" disabled={busy} onClick={() => setShowCamera(true)}>
+                      Use camera
+                    </button>
+                  </>
+                )}
+                <button type="button" className="btn-ghost" disabled={busy} onClick={reset}>
+                  New scan
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

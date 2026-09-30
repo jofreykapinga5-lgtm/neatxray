@@ -60,7 +60,7 @@ export default function CameraCapture({ onCapture, onClose }) {
           Tip: photograph the film straight on, avoid glare, and fill the frame. Photos of screens give lower-quality readings.
         </p>
         <div className="flex gap-2 justify-end">
-          <button type="button" onClick={onClose} className="btn-ghost !text-white !border-white/30 hover:!bg-white/10">
+          <button type="button" onClick={onClose} className="btn-on-dark">
             Close
           </button>
           {!error && (

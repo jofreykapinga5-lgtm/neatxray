@@ -76,10 +76,10 @@ export default function Viewer({ images, index, onSelect }) {
           <input type="range" min="40" max="250" value={contrast} onChange={(e) => setContrast(+e.target.value)} />
         </label>
         <div className="flex gap-2 sm:col-span-3">
-          <button type="button" onClick={() => setInvert((v) => !v)} className="btn-ghost !text-white !border-white/30 hover:!bg-white/10">
-            {invert ? "Normal" : "Invert"}
+          <button type="button" onClick={() => setInvert((v) => !v)} aria-pressed={invert} className="btn-on-dark">
+            Invert
           </button>
-          <button type="button" onClick={reset} className="btn-ghost !text-white !border-white/30 hover:!bg-white/10">
+          <button type="button" onClick={reset} className="btn-on-dark">
             Reset view
           </button>
         </div>
