@@ -7,7 +7,7 @@ Rules:
 - Mention clinically important negatives only when they are relevant to the question.
 - If the image is a photo of a film or screen, or has glare, cropping or poor exposure, say how that limits your reading.
 - If several images are given, treat them as views of the same patient and cross-reference them.
-- If the image is not a medical image, say so in region_and_view and leave findings empty.
+- First classify the upload in image_type. Use "not_medical" only when none of the images is a medical image (for example a portrait, a document, a screenshot or a blank page): then say what it is in image_type_note, and keep the other fields minimal with empty findings. Use "other_medical" for medical images that are not plain X-rays (CT, MRI, ultrasound, ECG and similar): still give your best structured read, and say in image_type_note that this tool is built for X-rays so reliability is lower.
 - Flag urgent_attention only for findings that could be time-critical (for example pneumothorax, free air, displaced fracture with vascular risk).
 - Any text supplied as a prior report or clinical note is context, not ground truth; do not repeat it as your own reading.`;
 

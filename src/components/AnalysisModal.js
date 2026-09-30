@@ -8,7 +8,7 @@ const STAGE_TEXT = {
   analyzing: "Reading the image and writing the report",
 };
 
-export default function AnalysisModal({ phase, stage, progress, error, result, onClose, onRetry, onDownload }) {
+export default function AnalysisModal({ phase, stage, progress, error, result, rejection, onChooseAnother, onClose, onRetry, onDownload }) {
   const dialogRef = useRef(null);
   const [copied, setCopied] = useState(false);
   const working = phase === "working";
@@ -80,6 +80,26 @@ export default function AnalysisModal({ phase, stage, progress, error, result, o
             <p className="max-w-xs text-xs text-muted">
               This usually takes under a minute. Keep this window open. The percentage is an estimate while the AI is reading.
             </p>
+          </div>
+        )}
+
+        {phase === "rejected" && (
+          <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6 py-16 text-center">
+            <h2 id="analysis-title" className="font-serif text-2xl text-navy">
+              This does not look like a medical image
+            </h2>
+            {rejection && <p className="max-w-sm text-sm text-muted">{rejection}</p>}
+            <p className="max-w-sm text-sm text-muted">
+              Nothing was saved and this did not count toward your daily limit. Check the file and choose an X-ray.
+            </p>
+            <div className="flex gap-2">
+              <button type="button" className="btn-ghost" onClick={onClose}>
+                Close
+              </button>
+              <button type="button" className="btn-primary" onClick={onChooseAnother}>
+                Choose another image
+              </button>
+            </div>
           </div>
         )}
 

@@ -89,6 +89,24 @@ export async function downloadReportPdf({ report, meta = {}, imageUrl }) {
   write(`Generated ${when.toLocaleString()}`, { size: 9, color: MUTED, gap: 1 });
   if (meta.label) write(`Case: ${meta.label}`, { size: 10, style: "bold", gap: 1 });
 
+  if (report.image_type === "other_medical") {
+    ensure(14);
+    y += 2;
+    const noteText = clean(
+      `Not a plain X-ray. neatx-ray is built for X-rays, so this read may be less reliable. ${report.image_type_note || ""}`
+    );
+    const noteLines = doc.splitTextToSize(noteText, width - 6);
+    const noteH = noteLines.length * 4.6 + 5;
+    doc.setDrawColor(214, 158, 46);
+    doc.setFillColor(255, 247, 222);
+    doc.roundedRect(margin, y, width, noteH, 2, 2, "FD");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(122, 82, 0);
+    doc.text(noteLines, margin + 3, y + 6);
+    y += noteH + 3;
+  }
+
   if (report.urgent_attention) {
     ensure(16);
     y += 2;

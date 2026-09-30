@@ -34,6 +34,7 @@ export default function Workspace({ email }) {
   const [stage, setStage] = useState("uploading"); // uploading | analyzing
   const [progress, setProgress] = useState(0);
   const caseIdRef = useRef(null);
+  const [rejection, setRejection] = useState("");
 
   const busy = status !== "idle";
 
@@ -102,6 +103,13 @@ export default function Workspace({ email }) {
       body: JSON.stringify({ caseId }),
     });
     const body = await res.json().catch(() => ({}));
+    if (res.status === 422 && body.code === "not_medical") {
+      caseIdRef.current = null;
+      setRejection(body.detail || "");
+      setPhase("rejected");
+      loadHistory();
+      return;
+    }
     if (!res.ok) throw new Error(body.error || "Analysis failed.");
     setProgress(100);
     setResult({ ...body, createdAt: new Date().toISOString() });
@@ -189,6 +197,16 @@ export default function Workspace({ email }) {
   function closeModal() {
     setModalOpen(false);
     setError("");
+  }
+
+  // After a "not a medical image" rejection: drop the images, keep the patient details, pick again.
+  function chooseAnother() {
+    images.forEach((i) => i.blob && URL.revokeObjectURL(i.url));
+    setImages([]);
+    setIndex(0);
+    setResult(null);
+    closeModal();
+    fileInput.current?.click();
   }
 
   async function downloadPdf() {
@@ -430,6 +448,8 @@ export default function Workspace({ email }) {
           progress={progress}
           error={error}
           result={result}
+          rejection={rejection}
+          onChooseAnother={chooseAnother}
           onClose={closeModal}
           onRetry={retryAnalysis}
           onDownload={downloadPdf}

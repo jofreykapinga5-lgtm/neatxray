@@ -44,6 +44,9 @@ export function reportToText(r) {
     ...r.limitations.map((o) => `- ${o}`),
   ];
   if (r.urgent_attention) lines.splice(2, 0, `URGENT: ${r.urgent_reason}`);
+  if (r.image_type === "other_medical") {
+    lines.splice(2, 0, `NOTE: Not a plain X-ray; this tool is built for X-rays, so reliability is lower. ${r.image_type_note || ""}`.trim());
+  }
   return lines.join("\n");
 }
 
@@ -60,6 +63,13 @@ export default function ReportView({ report, provider, model, onDownload, hideAc
 
   return (
     <div className="space-y-5">
+      {report.image_type === "other_medical" && (
+        <div role="note" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          <strong>This is not a plain X-ray.</strong> neatx-ray is built for X-rays, so this read may be less reliable.{" "}
+          {report.image_type_note}
+        </div>
+      )}
+
       {report.urgent_attention && (
         <div role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-900">
           <strong>Possible urgent finding.</strong> {report.urgent_reason}

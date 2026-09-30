@@ -67,6 +67,21 @@ export async function POST(request) {
       },
       provider || undefined
     );
+    // Not a medical image: remove the case and its files so nothing is kept or counted.
+    if (result.report.image_type === "not_medical") {
+      const paths = imageRows.map((r) => r.storage_path);
+      await supabase.storage.from("scans").remove(paths);
+      await supabase.from("cases").delete().eq("id", caseId);
+      return NextResponse.json(
+        {
+          code: "not_medical",
+          error: "This does not look like a medical image.",
+          detail: result.report.image_type_note || "",
+        },
+        { status: 422 }
+      );
+    }
+
     await supabase
       .from("cases")
       .update({ report: result.report, provider: result.provider, model: result.model })
