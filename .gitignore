@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# large working files (originals, drafts) - not needed to run the site
+/media-src/
+/brand-options/

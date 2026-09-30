@@ -1,0 +1,79 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { analyze } from "@/lib/ai";
+
+export const maxDuration = 300;
+
+const DAILY_LIMIT = Number(process.env.DAILY_SCAN_LIMIT || 50);
+
+export async function POST(request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+
+  const { caseId, provider } = await request.json().catch(() => ({}));
+  if (!caseId) return NextResponse.json({ error: "caseId is required" }, { status: 400 });
+
+  // RLS guarantees these only return the signed-in doctor's own rows.
+  const { data: caseRow, error: caseError } = await supabase
+    .from("cases")
+    .select("id, label, clinical_notes, patient_age, patient_sex, symptoms, medical_history, clinical_question")
+    .eq("id", caseId)
+    .single();
+  if (caseError || !caseRow) return NextResponse.json({ error: "Case not found" }, { status: 404 });
+
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count } = await supabase
+    .from("cases")
+    .select("id", { count: "exact", head: true })
+    .not("report", "is", null)
+    .gte("created_at", since);
+  if ((count ?? 0) >= DAILY_LIMIT) {
+    return NextResponse.json({ error: "Daily scan limit reached." }, { status: 429 });
+  }
+
+  const { data: imageRows, error: imagesError } = await supabase
+    .from("case_images")
+    .select("storage_path, mime_type")
+    .eq("case_id", caseId)
+    .order("created_at");
+  if (imagesError || !imageRows?.length) {
+    return NextResponse.json({ error: "No images attached to this case" }, { status: 400 });
+  }
+
+  const images = [];
+  for (const row of imageRows) {
+    const { data: blob, error } = await supabase.storage.from("scans").download(row.storage_path);
+    if (error || !blob) return NextResponse.json({ error: "Could not load an image" }, { status: 500 });
+    const buffer = Buffer.from(await blob.arrayBuffer());
+    images.push({ mediaType: row.mime_type || "image/jpeg", base64: buffer.toString("base64") });
+  }
+
+  try {
+    const result = await analyze(
+      {
+        images,
+        notes: caseRow.clinical_notes,
+        label: caseRow.label,
+        patient: {
+          age: caseRow.patient_age,
+          sex: caseRow.patient_sex,
+          symptoms: caseRow.symptoms,
+          history: caseRow.medical_history,
+          question: caseRow.clinical_question,
+        },
+      },
+      provider || undefined
+    );
+    await supabase
+      .from("cases")
+      .update({ report: result.report, provider: result.provider, model: result.model })
+      .eq("id", caseId);
+    return NextResponse.json({ report: result.report, provider: result.provider, model: result.model });
+  } catch (err) {
+    console.error("analyze failed:", err);
+    return NextResponse.json({ error: err.message || "Analysis failed" }, { status: 502 });
+  }
+}
