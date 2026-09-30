@@ -1,7 +1,13 @@
+import Image from "next/image";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { preload } from "react-dom";
 import Logo from "@/components/Logo";
 import NavMenu from "@/components/NavMenu";
+import reviewPhoto from "@/assets/landing/tz-review.jpg";
+import phonePhoto from "@/assets/landing/tz-phone.jpg";
+import teamPhoto from "@/assets/landing/tz-team.jpg";
+import portraitPhoto from "@/assets/landing/tz-portrait.jpg";
+import appScreenshot from "@/assets/landing/app-screenshot.jpg";
 
 const STEPS = [
   { n: "01", title: "Add the image", text: "Upload a scan, drop in a PDF, or photograph a film with your phone camera." },
@@ -44,26 +50,22 @@ function VideoFrame({ src, poster, label, className = "" }) {
   );
 }
 
-function Photo({ src, alt, className = "" }) {
+function Photo({ src, alt, className = "", sizes = "(min-width: 1024px) 560px, 100vw" }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <Image
       src={src}
       alt={alt}
-      width={1400}
-      height={933}
-      loading="lazy"
+      sizes={sizes}
+      placeholder="blur"
       className={`w-full h-auto rounded-3xl border border-line object-cover shadow-[0_24px_60px_rgba(31,53,86,0.14)] ${className}`}
     />
   );
 }
 
-export default async function Landing() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const cta = { href: user ? "/app" : "/login", label: "Scan now" };
+export default function Landing() {
+  // Start fetching the hero poster before the video element is parsed.
+  preload("/media/hero-poster.jpg", { as: "image", fetchPriority: "high" });
+  const cta = { href: "/app", label: "Scan now" };
 
   return (
     <div className="relative overflow-hidden">
@@ -114,12 +116,13 @@ export default async function Landing() {
               <span className="h-3 w-3 rounded-full bg-[#f2d48a]" />
               <span className="h-3 w-3 rounded-full bg-[#9fd9a6]" />
             </div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/media/app-screenshot.jpg"
+            <Image
+              src={appScreenshot}
               alt="The neatx-ray app showing a chest X-ray in the viewer and a structured AI report beside it"
-              width={2000}
-              height={1520}
+              sizes="(min-width: 1152px) 1152px, 100vw"
+              quality={80}
+              priority
+              placeholder="blur"
               className="block h-auto w-full"
             />
           </div>
@@ -155,7 +158,7 @@ export default async function Landing() {
           <p className="mt-4 text-muted max-w-md">
             Every finding carries a confidence label and the visible features behind it, so you can check the reasoning against the image.
           </p>
-          <Photo src="/media/tz-review.jpg" alt="A doctor in a clinic studying a chest X-ray on a monitor" className="mt-8 max-w-md" />
+          <Photo src={reviewPhoto} alt="A doctor in a clinic studying a chest X-ray on a monitor" className="mt-8 max-w-md" />
         </div>
         <div className="card p-6 space-y-4" aria-label="Illustrative sample report">
           <p className="text-xs uppercase tracking-wide text-muted">Illustrative example, not a real patient</p>
@@ -195,7 +198,7 @@ export default async function Landing() {
               Photos of films and screens carry less detail than original images, and the report says so when quality limits the reading.
             </p>
           </div>
-          <Photo src="/media/tz-phone.jpg" alt="A doctor photographing an X-ray film on a lightbox with a smartphone" />
+          <Photo src={phonePhoto} alt="A doctor photographing an X-ray film on a lightbox with a smartphone" />
         </div>
       </section>
 
@@ -204,7 +207,7 @@ export default async function Landing() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20">
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
             <h2 className="font-serif text-3xl sm:text-4xl text-navy max-w-md">Built for the way clinics actually work</h2>
-            <Photo src="/media/tz-team.jpg" alt="Two doctors discussing a chest X-ray film at a lightbox" />
+            <Photo src={teamPhoto} alt="Two doctors discussing a chest X-ray film at a lightbox" />
           </div>
           <div className="mt-14 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
@@ -219,7 +222,7 @@ export default async function Landing() {
 
       {/* Safety */}
       <section id="safety" className="mx-auto max-w-6xl px-4 sm:px-6 py-20 grid gap-12 lg:grid-cols-2 lg:items-center border-t border-line">
-        <Photo src="/media/tz-portrait.jpg" alt="A doctor in a hospital corridor" />
+        <Photo src={portraitPhoto} alt="A doctor in a hospital corridor" />
         <div>
           <h2 className="font-serif text-3xl sm:text-4xl text-navy">A second pair of eyes, never the final word</h2>
           <p className="mt-5 text-muted">
