@@ -67,7 +67,7 @@ export default function Landing() {
           poster="/media/hero-poster.jpg"
           wrapperClassName="absolute inset-0 -z-10"
           videoClassName="h-full w-full object-cover object-right"
-          buttonClassName="absolute bottom-32 right-4 z-10 sm:bottom-36 sm:right-6"
+          showButton={false}
         >
           <div className="absolute inset-0 bg-bg/80 lg:hidden" />
           <div className="absolute inset-0 hidden lg:block bg-gradient-to-r from-bg via-bg/85 to-bg/0" />

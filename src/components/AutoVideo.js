@@ -23,6 +23,7 @@ export default function AutoVideo({
   wrapperClassName = "absolute inset-0",
   videoClassName = "h-full w-full object-cover",
   buttonClassName = "absolute bottom-3 right-3 z-10",
+  showButton = true,
   children,
 }) {
   const ref = useRef(null);
@@ -60,6 +61,7 @@ export default function AutoVideo({
         />
         {children}
       </div>
+      {showButton && (
       <button
         type="button"
         onClick={toggle}
@@ -77,6 +79,7 @@ export default function AutoVideo({
           )}
         </svg>
       </button>
+      )}
     </>
   );
 }
