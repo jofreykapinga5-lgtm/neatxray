@@ -24,7 +24,7 @@ export default function NavMenu({ cta }) {
       <div className="flex items-center gap-8">
       <nav className="hidden md:flex items-center gap-7 text-sm text-navy" aria-label="Main">
         {LINKS.map((l) => (
-          <a key={l.href} href={l.href} className="hover:text-accent-strong">
+          <a key={l.href} href={l.href} className="py-2.5 hover:text-navy hover:underline underline-offset-4">
             {l.label}
           </a>
         ))}

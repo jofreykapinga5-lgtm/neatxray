@@ -10,6 +10,9 @@ import ReportView from "./ReportView";
 import CameraCapture from "./CameraCapture";
 import AnalysisModal from "./AnalysisModal";
 
+const ANALYSIS_TIMEOUT_MS = 120000;
+const TIMEOUT_MESSAGE = "This is taking longer than expected. If the report finishes, it will appear in Recent cases.";
+
 const EMPTY_PATIENT = { age: "", sex: "", symptoms: "", history: "", question: "" };
 
 export default function Workspace({ email }) {
@@ -36,6 +39,10 @@ export default function Workspace({ email }) {
   const [progress, setProgress] = useState(0);
   const caseIdRef = useRef(null);
   const [rejection, setRejection] = useState("");
+  const abortRef = useRef(null);
+  const stoppedRef = useRef(false);
+  const [notice, setNotice] = useState("");
+  const [resumeCaseId, setResumeCaseId] = useState(null);
 
   const busy = status !== "idle";
 
@@ -89,6 +96,8 @@ export default function Workspace({ email }) {
     setError("");
     setMessages([]);
     setModalOpen(false);
+    setNotice("");
+    setResumeCaseId(null);
     caseIdRef.current = null;
   }
 
@@ -98,12 +107,33 @@ export default function Workspace({ email }) {
     setStatus("analyzing");
     setStage("analyzing");
     setProgress((p) => Math.max(p, 30));
-    const res = await fetch("/api/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ caseId }),
-    });
-    const body = await res.json().catch(() => ({}));
+    stoppedRef.current = false;
+    const controller = new AbortController();
+    abortRef.current = controller;
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, ANALYSIS_TIMEOUT_MS);
+    let res;
+    let body;
+    try {
+      res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ caseId }),
+        signal: controller.signal,
+      });
+      body = await res.json().catch(() => ({}));
+    } catch (err) {
+      if (stoppedRef.current) return;
+      if (timedOut) throw new Error(TIMEOUT_MESSAGE);
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
+    if (stoppedRef.current) return;
+    if (timedOut) throw new Error(TIMEOUT_MESSAGE);
     if (res.status === 422 && body.code === "not_medical") {
       caseIdRef.current = null;
       setRejection(body.detail || "");
@@ -114,6 +144,7 @@ export default function Workspace({ email }) {
     if (!res.ok) throw new Error(body.error || "Analysis failed.");
     setProgress(100);
     setResult({ ...body, createdAt: new Date().toISOString() });
+    setResumeCaseId(null);
     loadHistory();
     await sleep(400);
     setPhase("done");
@@ -124,6 +155,8 @@ export default function Workspace({ email }) {
     setError("");
     setResult(null);
     caseIdRef.current = null;
+    setNotice("");
+    setResumeCaseId(null);
     setModalOpen(true);
     setPhase("working");
     setStage("uploading");
@@ -183,7 +216,11 @@ export default function Workspace({ email }) {
   async function retryAnalysis() {
     if (!caseIdRef.current) return runAnalysis();
     setError("");
+    setNotice("");
+    setModalOpen(true);
     setPhase("working");
+    setStage("analyzing");
+    setProgress((p) => Math.max(p, 30));
     setStatus("analyzing");
     try {
       await requestAnalysis(caseIdRef.current);
@@ -198,6 +235,17 @@ export default function Workspace({ email }) {
   function closeModal() {
     setModalOpen(false);
     setError("");
+  }
+
+  // Let the doctor leave the wait screen. The server keeps working; a finished report lands in Recent cases.
+  function stopWaiting() {
+    stoppedRef.current = true;
+    abortRef.current?.abort();
+    setModalOpen(false);
+    setStatus("idle");
+    setNotice("Still working in the background. If the report finishes, it will appear in Recent cases.");
+    setTimeout(loadHistory, 40000);
+    setTimeout(loadHistory, 90000);
   }
 
   // After a "not a medical image" rejection: drop the images, keep the patient details, pick again.
@@ -238,6 +286,7 @@ export default function Workspace({ email }) {
 
   async function openCase(c) {
     setError("");
+    setNotice("");
     const { data: rows } = await supabase.from("case_images").select("storage_path, original_name").eq("case_id", c.id).order("created_at");
     const loaded = [];
     for (const row of rows || []) {
@@ -257,8 +306,13 @@ export default function Workspace({ email }) {
     });
     setResult(c.report ? { report: c.report, provider: c.provider, model: c.model, createdAt: c.created_at } : null);
     if (c.report) {
+      setResumeCaseId(null);
       setPhase("done");
       setModalOpen(true);
+    } else {
+      // No report yet: the images are already saved, so Analyze can run just the AI step.
+      caseIdRef.current = c.id;
+      setResumeCaseId(c.id);
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -278,8 +332,9 @@ export default function Workspace({ email }) {
     router.refresh();
   }
 
-  const statusText = { preparing: "Preparing files…", uploading: "Uploading securely…", analyzing: "Analyzing… this can take up to a minute." }[status];
-  const canAnalyze = images.length > 0 && images.every((i) => i.blob) && !busy;
+  const statusText = { preparing: "Preparing files…", uploading: "Uploading securely…", analyzing: "Analyzing… this usually takes about a minute." }[status];
+  const resumable = Boolean(resumeCaseId) && !result;
+  const canAnalyze = (images.length > 0 && images.every((i) => i.blob) && !busy) || (resumable && !busy);
   const hasImages = images.length > 0;
   const viewingSaved = images.some((i) => !i.blob);
   const detailsFilled = [
@@ -348,9 +403,9 @@ export default function Workspace({ email }) {
               <ul className="flex flex-wrap gap-2 text-xs">
                 {images.map((img, i) =>
                   img.blob ? (
-                    <li key={img.url} className="rounded-full border border-line px-3 py-1 flex items-center gap-2">
+                    <li key={img.url} className="rounded-full border border-line pl-3 pr-1 flex items-center gap-1">
                       {img.name}
-                      <button type="button" aria-label={`Remove ${img.name}`} onClick={() => removeImage(i)} className="text-muted hover:text-navy">
+                      <button type="button" aria-label={`Remove ${img.name}`} onClick={() => removeImage(i)} className="grid h-11 w-11 place-items-center rounded-full text-base text-muted hover:text-navy">
                         ×
                       </button>
                     </li>
@@ -425,10 +480,16 @@ export default function Workspace({ email }) {
               <textarea className="field mt-1" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} />
             </label>
 
-            <button type="button" className="btn-primary w-full" disabled={!canAnalyze} onClick={runAnalysis}>
+            {resumable && (
+              <p className="text-sm text-navy/80">
+                This case has no report yet. Press Analyze to try again with the images already saved.
+              </p>
+            )}
+            <button type="button" className="btn-primary w-full" disabled={!canAnalyze} onClick={resumable ? retryAnalysis : runAnalysis}>
               {busy ? statusText : "Analyze"}
             </button>
             {error && !modalOpen && <p role="alert" className="text-sm text-red-700">{error}</p>}
+            {notice && <p role="status" className="text-sm text-navy/80">{notice}</p>}
 
             {hasImages && (
               <div className="flex flex-wrap gap-2 border-t border-line pt-4">
@@ -451,8 +512,9 @@ export default function Workspace({ email }) {
         </div>
 
         <div className="space-y-6">
-          <section className="card p-5 sm:p-6" aria-live="polite">
+          <section className="card p-5 sm:p-6">
             <h2 className="font-serif text-2xl mb-4">Report</h2>
+            <p className="sr-only" role="status">{result ? "Report ready" : busy ? statusText : ""}</p>
             {result ? (
               <ReportView report={result.report} provider={result.provider} model={result.model} onDownload={downloadPdf} />
             ) : (
@@ -481,7 +543,7 @@ export default function Workspace({ email }) {
                         type="button"
                         onClick={() => openCase(c)}
                         aria-label={`Open ${c.label || "untitled case"}`}
-                        className="btn-primary !min-h-0 !px-4 !py-1.5 text-sm"
+                        className="btn-primary !px-4 text-sm"
                       >
                         Open
                       </button>
@@ -489,7 +551,7 @@ export default function Workspace({ email }) {
                         type="button"
                         onClick={() => deleteCase(c)}
                         aria-label={`Delete ${c.label || "untitled case"}`}
-                        className="btn-ghost !min-h-0 !px-3 !py-1.5 text-sm !text-red-700"
+                        className="btn-ghost !px-3 text-sm !text-red-700"
                       >
                         Delete
                       </button>
@@ -510,9 +572,11 @@ export default function Workspace({ email }) {
           error={error}
           result={result}
           rejection={rejection}
+          thumb={images[0]?.url}
           onChooseAnother={chooseAnother}
           onClose={closeModal}
           onRetry={retryAnalysis}
+          onStopWaiting={stopWaiting}
           onDownload={downloadPdf}
         />
       )}

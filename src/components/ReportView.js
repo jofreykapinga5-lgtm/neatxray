@@ -63,6 +63,10 @@ export default function ReportView({ report, provider, model, onDownload, hideAc
 
   return (
     <div className="space-y-5">
+      <p className="border-b border-line pb-3 text-sm text-navy/80">
+        <strong className="font-semibold">AI decision support, not a diagnosis.</strong> Confirm the findings yourself.
+      </p>
+
       {report.image_type === "other_medical" && (
         <div role="note" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
           <strong>This is not a plain X-ray.</strong> neatx-ray is built for X-rays, so this read may be less reliable.{" "}

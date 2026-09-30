@@ -96,6 +96,7 @@ export default function Viewer({ images, index, onSelect }) {
                 reset();
               }}
               aria-label={`Show image ${i + 1}`}
+              aria-current={i === index ? "true" : undefined}
               className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 ${i === index ? "border-accent" : "border-transparent"}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}

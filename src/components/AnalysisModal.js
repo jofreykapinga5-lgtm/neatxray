@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 import ReportView, { reportToText } from "./ReportView";
 
 const STAGE_TEXT = {
@@ -8,13 +9,32 @@ const STAGE_TEXT = {
   analyzing: "Reading the image and writing the report",
 };
 
-export default function AnalysisModal({ phase, stage, progress, error, result, rejection, onChooseAnother, onClose, onRetry, onDownload }) {
+const SLOW_AFTER_MS = 15000;
+
+export default function AnalysisModal({
+  phase,
+  stage,
+  progress,
+  error,
+  result,
+  rejection,
+  thumb,
+  onChooseAnother,
+  onClose,
+  onRetry,
+  onStopWaiting,
+  onDownload,
+}) {
   const dialogRef = useRef(null);
   const [copied, setCopied] = useState(false);
+  const [slow, setSlow] = useState(false);
   const working = phase === "working";
 
+  useDialogFocus(dialogRef, () => {
+    if (!working) onClose();
+  });
+
   useEffect(() => {
-    dialogRef.current?.focus();
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -22,12 +42,15 @@ export default function AnalysisModal({ phase, stage, progress, error, result, r
     };
   }, []);
 
+  // After a while, offer a way out instead of leaving the doctor locked in.
   useEffect(() => {
-    if (working) return;
-    const onKey = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [working, onClose]);
+    if (!working) return;
+    const timer = setTimeout(() => setSlow(true), SLOW_AFTER_MS);
+    return () => {
+      clearTimeout(timer);
+      setSlow(false);
+    };
+  }, [working]);
 
   async function copy() {
     try {
@@ -56,6 +79,10 @@ export default function AnalysisModal({ phase, stage, progress, error, result, r
       >
         {working && (
           <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 py-16 text-center">
+            {thumb && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={thumb} alt="" className="h-20 w-20 rounded-xl border border-line object-cover" />
+            )}
             <h2 id="analysis-title" className="font-serif text-2xl text-navy">
               Analyzing your scan
             </h2>
@@ -78,8 +105,18 @@ export default function AnalysisModal({ phase, stage, progress, error, result, r
               </p>
             </div>
             <p className="max-w-xs text-xs text-muted">
-              This usually takes under a minute. Keep this window open. The percentage is an estimate while the AI is reading.
+              This usually takes about a minute. The percentage is an estimate while the AI is reading.
             </p>
+            {slow && (
+              <div className="max-w-xs space-y-3 border-t border-line pt-5">
+                <p className="text-sm text-navy/80">
+                  Taking longer than usual? You can stop waiting. If the report finishes, it will appear in Recent cases.
+                </p>
+                <button type="button" className="btn-ghost" onClick={onStopWaiting}>
+                  Stop waiting
+                </button>
+              </div>
+            )}
           </div>
         )}
 

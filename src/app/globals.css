@@ -4,8 +4,9 @@
   --bg: #eaf6f8;
   --surface: #ffffff;
   --navy: #1f3556;
-  --muted: #5d7186;
+  --muted: #51657a;
   --line: #cfe3e8;
+  --line-strong: #6f929e;
   --accent: #1aa7c4;
   --accent-strong: #0f8aa6;
   --viewer: #0b141d;
@@ -39,7 +40,7 @@ body {
 
 .field {
   width: 100%;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   border-radius: 10px;
   padding: 0.6rem 0.75rem;
   background: #fff;
@@ -48,6 +49,12 @@ body {
 .field:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+/* One visible keyboard focus ring for every link, button and summary. */
+:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
 }
 
 .btn-primary,

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { preload } from "react-dom";
 import Logo from "@/components/Logo";
+import AutoVideo from "@/components/AutoVideo";
 import NavMenu from "@/components/NavMenu";
 import reviewPhoto from "@/assets/landing/tz-review.jpg";
 import phonePhoto from "@/assets/landing/tz-phone.jpg";
@@ -12,7 +13,7 @@ import appScreenshot from "@/assets/landing/app-screenshot.jpg";
 const STEPS = [
   { n: "01", title: "Add the image", text: "Upload a scan, drop in a PDF, or photograph a film with your phone camera." },
   { n: "02", title: "Add context", text: "Note the age, symptoms, or the question you want the AI to focus on." },
-  { n: "03", title: "Review the read", text: "Get a structured second opinion in under a minute, then confirm it with your own judgement." },
+  { n: "03", title: "Review the read", text: "Get a structured second opinion in about a minute, then confirm it with your own judgement." },
 ];
 
 const FEATURES = [
@@ -29,23 +30,13 @@ const FAQ = [
   { q: "What can I upload?", a: "Common image formats (JPG, PNG, WebP, HEIC), PDFs and live camera photos. DICOM and TIFF are not supported yet; export them as JPG or PNG." },
   { q: "Who can see my images?", a: "Only your own account. Images are stored in a private bucket and opened through short-lived links. Use anonymized images and keep patient names and IDs out of labels and notes." },
   { q: "Can I use it on real patients?", a: "Check your local health-data rules and your organisation's policy first. During evaluation, use anonymized or public images." },
-  { q: "How do I get access?", a: "Accounts are by invitation. Ask the administrator to add you." },
+  { q: "How do I get access?", a: "Accounts are created for you by an administrator. Ask them to add you with your email address." },
 ];
 
-function VideoFrame({ src, poster, label, className = "" }) {
+function VideoFrame({ src, poster, className = "" }) {
   return (
-    <div className={`overflow-hidden rounded-3xl border border-line bg-viewer shadow-[0_24px_60px_rgba(31,53,86,0.18)] ${className}`}>
-      <video
-        className="h-full w-full object-cover"
-        src={src}
-        poster={poster}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        aria-label={label}
-      />
+    <div className={`relative overflow-hidden rounded-3xl border border-line bg-viewer shadow-[0_24px_60px_rgba(31,53,86,0.18)] ${className}`}>
+      <AutoVideo src={src} poster={poster} buttonClassName="absolute bottom-3 right-3 z-10" />
     </div>
   );
 }
@@ -71,34 +62,30 @@ export default function Landing() {
     <div className="relative overflow-hidden">
       {/* Hero with video background */}
       <div className="relative isolate">
-        <div className="absolute inset-0 -z-10" aria-hidden="true">
-          <video
-            className="h-full w-full object-cover object-right"
-            src="/media/hero.mp4"
-            poster="/media/hero-poster.jpg"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-          />
+        <AutoVideo
+          src="/media/hero.mp4"
+          poster="/media/hero-poster.jpg"
+          wrapperClassName="absolute inset-0 -z-10"
+          videoClassName="h-full w-full object-cover object-right"
+          buttonClassName="absolute bottom-32 right-4 z-10 sm:bottom-36 sm:right-6"
+        >
           <div className="absolute inset-0 bg-bg/80 lg:hidden" />
           <div className="absolute inset-0 hidden lg:block bg-gradient-to-r from-bg via-bg/85 to-bg/0" />
           <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-bg to-bg/0" />
-        </div>
+        </AutoVideo>
 
         <header className="relative mx-auto max-w-6xl px-4 sm:px-6 py-5 flex items-center justify-between">
-          <Link href="/" aria-label="neatx-ray home"><Logo size={34} /></Link>
+          <Link href="/" aria-label="neatx-ray home" className="inline-flex min-h-[44px] items-center"><Logo size={34} /></Link>
           <NavMenu cta={cta} />
         </header>
 
-        <section className="mx-auto max-w-6xl px-4 sm:px-6 pt-16 pb-28 sm:pt-28 sm:pb-40">
+        <section className="mx-auto max-w-6xl px-4 sm:px-6 pt-16 pb-28 sm:pt-24 sm:pb-40">
           <div className="max-w-xl">
             <h1 className="font-serif text-4xl sm:text-6xl leading-[1.05] text-navy">
               A calm second read on every <span className="whitespace-nowrap">X-ray.</span>
             </h1>
             <p className="mt-5 text-lg text-navy/80">
-              Upload a film, a PDF or a phone photo and get a structured AI read in under a minute, with the uncertainty spelled out. You stay in charge of the diagnosis.
+              Upload a film, PDF or phone photo. Get a structured AI read in about a minute, with uncertainty spelled out.
             </p>
             <div className="mt-8">
               <Link href={cta.href} className="btn-primary inline-flex items-center">{cta.label}</Link>
@@ -133,7 +120,7 @@ export default function Landing() {
       {/* How it works */}
       <section id="how" className="bg-surface/60 border-y border-line">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 grid gap-12 lg:grid-cols-2 lg:items-center">
-          <VideoFrame src="/media/workflow.mp4" poster="/media/workflow-poster.jpg" label="Clinician reviewing a scan" className="aspect-video order-last lg:order-first" />
+          <VideoFrame src="/media/workflow.mp4" poster="/media/workflow-poster.jpg" className="aspect-video order-last lg:order-first" />
           <div>
             <h2 className="font-serif text-3xl sm:text-4xl text-navy">From image to report in three steps</h2>
             <ol className="mt-8 space-y-7">
@@ -154,7 +141,7 @@ export default function Landing() {
       {/* Sample report */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 py-20 grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-center">
         <div>
-          <h2 className="font-serif text-3xl sm:text-4xl text-navy">Reports you can scan in seconds</h2>
+          <h2 className="font-serif text-3xl sm:text-4xl text-navy">Reports you can read at a glance</h2>
           <p className="mt-4 text-muted max-w-md">
             Every finding carries a confidence label and the visible features behind it, so you can check the reasoning against the image.
           </p>
@@ -226,7 +213,7 @@ export default function Landing() {
         <div>
           <h2 className="font-serif text-3xl sm:text-4xl text-navy">A second pair of eyes, never the final word</h2>
           <p className="mt-5 text-muted">
-            AI can miss findings and can state things that are not there. neatx-ray is designed to support your review, not replace it: it shows its reasoning, labels its uncertainty, flags possibly urgent findings, and reminds you on every screen that the clinical decision is yours.
+            AI can miss findings and can state things that are not there. neatx-ray is designed to support your review, not replace it: it shows its reasoning, labels its uncertainty, flags possibly urgent findings, and reminds you on every report that the clinical decision is yours.
           </p>
         </div>
       </section>
@@ -236,12 +223,12 @@ export default function Landing() {
         <h2 className="font-serif text-3xl text-navy text-center">Questions</h2>
         <div className="mt-8 divide-y divide-line border-y border-line">
           {FAQ.map((f) => (
-            <details key={f.q} className="group py-4">
-              <summary className="cursor-pointer list-none flex items-center justify-between gap-4 font-medium text-navy">
+            <details key={f.q} className="group">
+              <summary className="cursor-pointer list-none flex min-h-[44px] items-center justify-between gap-4 py-4 font-medium text-navy">
                 {f.q}
                 <span className="text-accent-strong transition-transform group-open:rotate-45 text-xl leading-none" aria-hidden="true">+</span>
               </summary>
-              <p className="mt-3 text-sm text-muted">{f.a}</p>
+              <p className="-mt-1 pb-4 text-sm text-muted">{f.a}</p>
             </details>
           ))}
         </div>
@@ -252,7 +239,7 @@ export default function Landing() {
         <div className="rounded-3xl bg-navy text-white px-6 py-14 sm:px-14 text-center">
           <h2 className="font-serif text-3xl sm:text-4xl">Bring a calmer workflow to your reading room</h2>
           <p className="mt-3 text-white/70">Access is by invitation. You will be asked to sign in first.</p>
-          <Link href={cta.href} className="mt-8 inline-flex items-center rounded-full bg-accent px-6 min-h-[44px] font-semibold text-white hover:bg-accent-strong">
+          <Link href={cta.href} className="mt-8 inline-flex items-center rounded-full bg-white px-6 min-h-[44px] font-semibold text-navy hover:bg-bg">
             {cta.label}
           </Link>
         </div>

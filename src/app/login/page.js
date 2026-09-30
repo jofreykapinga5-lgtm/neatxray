@@ -32,6 +32,7 @@ export default function LoginPage() {
     <main className="min-h-screen grid place-items-center px-4">
       <form onSubmit={onSubmit} className="w-full max-w-sm card p-8 space-y-5">
         <div>
+          <h1 className="sr-only">Sign in to neatx-ray</h1>
           <Link href="/" aria-label="neatx-ray home"><Logo size={36} /></Link>
           <p className="text-sm text-muted mt-1">AI decision support for doctors. Sign in to continue.</p>
         </div>

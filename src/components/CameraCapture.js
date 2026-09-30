@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useDialogFocus } from "@/lib/use-dialog-focus";
 
 export default function CameraCapture({ onCapture, onClose }) {
   const videoRef = useRef(null);
+  const dialogRef = useRef(null);
   const streamRef = useRef(null);
   const [error, setError] = useState("");
+
+  useDialogFocus(dialogRef, onClose);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +53,7 @@ export default function CameraCapture({ onCapture, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 grid place-items-center p-4" role="dialog" aria-modal="true" aria-label="Camera">
+    <div ref={dialogRef} tabIndex={-1} className="fixed inset-0 z-50 bg-black/80 grid place-items-center p-4 outline-none" role="dialog" aria-modal="true" aria-label="Camera">
       <div className="w-full max-w-2xl rounded-2xl bg-viewer p-4 text-white space-y-3">
         {error ? (
           <p className="p-6 text-sm">{error}</p>
@@ -64,7 +68,7 @@ export default function CameraCapture({ onCapture, onClose }) {
             Close
           </button>
           {!error && (
-            <button type="button" onClick={snap} className="btn-primary !bg-accent hover:!bg-accent-strong">
+            <button type="button" onClick={snap} className="btn-primary !bg-white !text-navy">
               Take photo
             </button>
           )}
