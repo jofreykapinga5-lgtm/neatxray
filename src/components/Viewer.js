@@ -2,12 +2,13 @@
 
 import { useRef, useState } from "react";
 
-export default function Viewer({ images, index, onSelect }) {
+export default function Viewer({ images, index, onSelect, onUpload, onCamera, onFiles, busy }) {
   const [zoom, setZoom] = useState(1);
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
   const [invert, setInvert] = useState(false);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
   const drag = useRef(null);
 
   const current = images[index];
@@ -35,6 +36,47 @@ export default function Viewer({ images, index, onSelect }) {
     setZoom((z) => Math.min(6, Math.max(1, z - e.deltaY * 0.002)));
   }
 
+  function onDrop(e) {
+    e.preventDefault();
+    setDragging(false);
+    if (e.dataTransfer?.files?.length) onFiles?.(e.dataTransfer.files);
+  }
+
+  // Nothing added yet: the viewer is the invitation, so the first action is right here.
+  if (images.length === 0) {
+    return (
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={onDrop}
+        className={`flex min-h-[300px] flex-col items-center justify-center gap-5 rounded-2xl border-2 border-dashed bg-viewer px-6 py-12 text-center text-white transition-colors ${
+          dragging ? "border-accent bg-white/10" : "border-white/25"
+        }`}
+      >
+        <svg width="44" height="44" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M4 11V8a4 4 0 0 1 4-4h3M21 4h3a4 4 0 0 1 4 4v3M28 21v3a4 4 0 0 1-4 4h-3M11 28H8a4 4 0 0 1-4-4v-3" stroke="#1aa7c4" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M9 16h14" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+        <div>
+          <h2 className="font-serif text-2xl">Add an X-ray</h2>
+          <p className="mt-1 text-sm text-white/75">Drop an image or PDF here, or choose how to add it.</p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2">
+          <button type="button" className="btn-primary !bg-white !text-navy" disabled={busy} onClick={onUpload}>
+            Upload image or PDF
+          </button>
+          <button type="button" className="btn-on-dark" disabled={busy} onClick={onCamera}>
+            Use camera
+          </button>
+        </div>
+        <p className="text-xs text-white/60">JPG, PNG, WebP, HEIC and PDF. Photos of films work too.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl overflow-hidden bg-viewer text-white flex flex-col">
       <div
@@ -45,7 +87,7 @@ export default function Viewer({ images, index, onSelect }) {
         onPointerCancel={onPointerUp}
         onWheel={onWheel}
       >
-        {current ? (
+        {current && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={current.url}
@@ -58,8 +100,6 @@ export default function Viewer({ images, index, onSelect }) {
               filter: `brightness(${brightness}%) contrast(${contrast}%) invert(${invert ? 1 : 0})`,
             }}
           />
-        ) : (
-          <div className="absolute inset-0 grid place-items-center text-sm text-white/60">No image selected</div>
         )}
       </div>
 

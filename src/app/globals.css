@@ -186,10 +186,10 @@ body {
 .scan-region {
   display: none;
   position: absolute;
-  left: 7.3%;
-  top: 7.6%;
+  left: 7.2%;
+  top: 6.4%;
   width: 41.9%;
-  height: 65.4%;
+  height: 43.6%;
   /* clip, not hidden: hidden would make this box its own scroll container and freeze the scroll timeline */
   overflow: clip;
   border-radius: 14px;
@@ -249,3 +249,5 @@ details[open]::details-content { block-size: auto; }
   .btn-ghost:active,
   .btn-on-dark:active { transform: none; }
 }
+
+input[type="range"] { accent-color: var(--accent); }

@@ -15,6 +15,24 @@ const TIMEOUT_MESSAGE = "This is taking longer than expected. If the report fini
 
 const EMPTY_PATIENT = { age: "", sex: "", symptoms: "", history: "", question: "" };
 
+const dateFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false });
+const dateFormatWithYear = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
+
+function caseWhen(iso) {
+  const date = new Date(iso);
+  return (date.getFullYear() === new Date().getFullYear() ? dateFormat : dateFormatWithYear).format(date);
+}
+
+function caseTitle(c) {
+  if (c.label) return c.label;
+  const age = c.patient_age !== null && c.patient_age !== undefined ? `${c.patient_age} y` : "";
+  const sex = c.patient_sex === "female" ? "F" : c.patient_sex === "male" ? "M" : "";
+  const who = [age, sex].filter(Boolean).join(" ");
+  // Drop bracketed asides such as "(likely PA, erect)" so titles stay short.
+  const region = c.report?.region_and_view?.replace(/\s*\([^)]*\)/g, "");
+  return [region, who].filter(Boolean).join(", ") || "Untitled case";
+}
+
 export default function Workspace({ email }) {
   const router = useRouter();
   const supabase = useRef(createClient()).current;
@@ -368,8 +386,16 @@ export default function Workspace({ email }) {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 pb-16 grid gap-6 lg:grid-cols-2">
-        <div className="space-y-4">
-          <Viewer images={images} index={index} onSelect={setIndex} />
+        <div className="min-w-0 space-y-4">
+          <Viewer
+            images={images}
+            index={index}
+            onSelect={setIndex}
+            onUpload={() => fileInput.current?.click()}
+            onCamera={() => setShowCamera(true)}
+            onFiles={addFiles}
+            busy={busy}
+          />
 
           <div className="card p-4 space-y-4">
             <input
@@ -383,17 +409,6 @@ export default function Workspace({ email }) {
                 e.target.value = "";
               }}
             />
-
-            {!hasImages && (
-              <div className="flex flex-wrap gap-2">
-                <button type="button" className="btn-primary" disabled={busy} onClick={() => fileInput.current?.click()}>
-                  Upload image or PDF
-                </button>
-                <button type="button" className="btn-ghost" disabled={busy} onClick={() => setShowCamera(true)}>
-                  Use camera
-                </button>
-              </div>
-            )}
 
             {messages.map((m, i) => (
               <p key={i} className="text-sm text-amber-800">{m}</p>
@@ -432,14 +447,18 @@ export default function Workspace({ email }) {
 
             <fieldset ref={detailsRef} className="scroll-mt-4 space-y-3 rounded-xl border border-line p-3">
               <legend className="px-1 text-sm font-semibold">Patient details</legend>
-              <div className="rounded-lg bg-bg p-3 text-sm text-navy/90">
-                <p className="font-semibold">Why we ask for this</p>
-                <p className="mt-1">
-                  The AI reads the film together with what you know about the patient. Age, symptoms and history change
-                  which findings matter, and a clear clinical question tells it what you need to decide. With more detail
-                  the report is more specific and more useful. With none, it stays general. Everything here is optional.
+              <p className="text-sm text-navy/90">
+                The AI reads the film together with what you tell it. More detail makes the report more specific and more useful.
+              </p>
+              <details className="text-sm text-navy/90">
+                <summary className="inline-flex min-h-[44px] cursor-pointer list-none items-center font-medium text-navy underline underline-offset-4">
+                  Why each detail helps
+                </summary>
+                <p className="pb-2">
+                  Age, symptoms and history change which findings matter, and a clear clinical question tells it what you
+                  need to decide. With none, the report stays general. Everything here is optional.
                 </p>
-              </div>
+              </details>
               <p className="text-xs text-muted">
                 Details added: {detailsFilled} of 5. Do not enter names, phone numbers or addresses.
               </p>
@@ -471,14 +490,22 @@ export default function Workspace({ email }) {
               </label>
             </fieldset>
 
-            <label className="block text-sm">
-              <span>Case label <span className="text-muted">(optional)</span></span>
-              <input className="field mt-1" value={label} onChange={(e) => setLabel(e.target.value)} maxLength={80} placeholder="e.g. Chest PA, follow-up" />
-            </label>
-            <label className="block text-sm">
-              <span>Additional notes <span className="text-muted">(optional)</span></span>
-              <textarea className="field mt-1" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} />
-            </label>
+            <details className="rounded-xl border border-line px-3">
+              <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-navy">
+                <span>More options <span className="font-normal text-muted">(case label, notes)</span></span>
+                <span className="text-lg leading-none text-muted" aria-hidden="true">+</span>
+              </summary>
+              <div className="space-y-4 pb-3 pt-1">
+                <label className="block text-sm">
+                  <span>Case label</span>
+                  <input className="field mt-1" value={label} onChange={(e) => setLabel(e.target.value)} maxLength={80} placeholder="e.g. Chest PA, follow-up" />
+                </label>
+                <label className="block text-sm">
+                  <span>Additional notes</span>
+                  <textarea className="field mt-1" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} />
+                </label>
+              </div>
+            </details>
 
             {resumable && (
               <p className="text-sm text-navy/80">
@@ -511,7 +538,7 @@ export default function Workspace({ email }) {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <section className="card p-5 sm:p-6">
             <h2 className="font-serif text-2xl mb-4">Report</h2>
             <p className="sr-only" role="status">{result ? "Report ready" : busy ? statusText : ""}</p>
@@ -533,24 +560,24 @@ export default function Workspace({ email }) {
                 {history.map((c) => (
                   <li key={c.id} className="py-3 flex items-center justify-between gap-3 text-sm">
                     <div className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">{c.label || "Untitled case"}</span>
+                      <span className="block truncate font-medium">{caseTitle(c)}</span>
                       <span className="block text-xs text-muted">
-                        {new Date(c.created_at).toLocaleString()} · {c.report ? "analyzed" : "no report"}
+                        {caseWhen(c.created_at)} · {c.report ? "Report ready" : "No report yet"}
                       </span>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <button
                         type="button"
                         onClick={() => openCase(c)}
-                        aria-label={`Open ${c.label || "untitled case"}`}
-                        className="btn-primary !px-4 text-sm"
+                        aria-label={`Open ${caseTitle(c)}`}
+                        className="btn-ghost !px-4 text-sm"
                       >
                         Open
                       </button>
                       <button
                         type="button"
                         onClick={() => deleteCase(c)}
-                        aria-label={`Delete ${c.label || "untitled case"}`}
+                        aria-label={`Delete ${caseTitle(c)}`}
                         className="btn-ghost !px-3 text-sm !text-red-700"
                       >
                         Delete

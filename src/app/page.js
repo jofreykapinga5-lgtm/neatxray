@@ -4,7 +4,6 @@ import { preload } from "react-dom";
 import Logo from "@/components/Logo";
 import AutoVideo from "@/components/AutoVideo";
 import NavMenu from "@/components/NavMenu";
-import reviewPhoto from "@/assets/landing/tz-review.jpg";
 import phonePhoto from "@/assets/landing/tz-phone.jpg";
 import teamPhoto from "@/assets/landing/tz-team.jpg";
 import portraitPhoto from "@/assets/landing/tz-portrait.jpg";
@@ -18,10 +17,8 @@ const STEPS = [
 
 const FEATURES = [
   { title: "Every format you actually have", text: "JPG, PNG, WebP, HEIC phone photos, multi-page PDFs and live camera capture. No converting first." },
-  { title: "A viewer built for reading films", text: "Zoom, pan, brightness, contrast and invert, so you can check the AI's read against the image." },
-  { title: "Structured, scannable reports", text: "Region and view, observations, findings with Likely / Possible / Unlikely labels, follow-up and limitations." },
   { title: "Honest about uncertainty", text: "Poor exposure, glare or a photo of a screen? The report says how that limits the reading instead of guessing." },
-  { title: "Private by design", text: "Invite-only accounts. Images sit in a private bucket and are visible only to the doctor who uploaded them." },
+  { title: "Private by design", text: "Images sit in a private store and are visible only to the doctor who uploaded them." },
   { title: "Yours to delete", text: "Remove any case and its images permanently with one click." },
 ];
 
@@ -49,6 +46,18 @@ function Photo({ src, alt, className = "", sizes = "(min-width: 1024px) 560px, 1
       sizes={sizes}
       placeholder="blur"
       className={`w-full h-auto rounded-3xl border border-line object-cover shadow-[0_24px_60px_rgba(31,53,86,0.14)] ${className}`}
+    />
+  );
+}
+
+function WidePhoto({ src, alt }) {
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      sizes="(min-width: 1152px) 1152px, 100vw"
+      placeholder="blur"
+      className="aspect-[4/3] w-full rounded-3xl border border-line object-cover object-[50%_25%] shadow-[0_24px_60px_rgba(31,53,86,0.14)] sm:aspect-[21/9]"
     />
   );
 }
@@ -118,115 +127,81 @@ export default function Landing() {
             </div>
             </div>
           </div>
-          <p className="mt-4 text-center text-xs text-muted">Illustrative example with a sample image. Not a real patient.</p>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section id="how" className="bg-surface/60 border-y border-line">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 grid gap-12 lg:grid-cols-2 lg:items-center">
-          <VideoFrame src="/media/workflow.mp4" poster="/media/workflow-poster.jpg" className="aspect-video order-last lg:order-first" />
-          <div>
-            <h2 className="font-serif text-3xl sm:text-4xl text-navy">From image to report in three steps</h2>
-            <ol className="mt-8 space-y-7">
-              {STEPS.map((s) => (
-                <li key={s.n} className="flex gap-5">
-                  <span className="font-serif text-2xl text-accent-strong w-10 shrink-0">{s.n}</span>
-                  <div>
-                    <h3 className="font-semibold text-navy">{s.title}</h3>
-                    <p className="text-muted mt-1">{s.text}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-      </section>
-
-      {/* Sample report */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 py-20 grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-center">
-        <div>
-          <h2 className="font-serif text-3xl sm:text-4xl text-navy">Reports you can read at a glance</h2>
-          <p className="mt-4 text-muted max-w-md">
-            Every finding carries a confidence label and the visible features behind it, so you can check the reasoning against the image.
+          <p className="mx-auto mt-6 max-w-xl text-center text-navy/80">
+            Every finding carries a confidence label and the visible features behind it, so you can check the reasoning against your own film.
           </p>
-          <Photo src={reviewPhoto} alt="A doctor in a clinic studying a chest X-ray on a monitor" className="mt-8 max-w-md" />
+          <p className="mt-2 text-center text-xs text-muted">Illustrative example with a sample image. Not a real patient.</p>
         </div>
-        <div className="card p-6 space-y-4" aria-label="Illustrative sample report">
-          <p className="text-xs uppercase tracking-wide text-muted">Illustrative example, not a real patient</p>
-          <div>
-            <p className="font-serif text-lg">Region and view</p>
-            <p className="text-sm">Chest, PA projection. Image quality: adequate.</p>
-          </div>
-          <div className="rounded-xl border border-line p-3 text-sm space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="badge badge-possible">Possible</span>
-              <strong>Right lower zone opacity</strong>
-              <span className="text-muted">· right lung base</span>
-            </div>
-            <p className="text-muted">Increased density blurring the right hemidiaphragm outline. Correlate with symptoms.</p>
-          </div>
-          <div className="rounded-xl border border-line p-3 text-sm space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="badge badge-unlikely">Unlikely</span>
-              <strong>Pneumothorax</strong>
-              <span className="text-muted">· both lungs</span>
-            </div>
-            <p className="text-muted">Lung markings are visible to the periphery on both sides.</p>
-          </div>
-          <p className="text-xs text-muted">Limitations: single view; clinical history needed for interpretation.</p>
+      </section>
+
+      {/* How it works: wide video, then the three steps in a row */}
+      <section id="how" className="bg-surface/60 border-y border-line">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20">
+          <h2 className="max-w-2xl font-serif text-3xl sm:text-4xl text-navy">From image to report in three steps</h2>
+          <VideoFrame src="/media/workflow.mp4" poster="/media/workflow-poster.jpg" className="mt-10 aspect-video md:aspect-[21/9]" />
+          <ol className="mt-10 grid gap-8 md:grid-cols-3">
+            {STEPS.map((s) => (
+              <li key={s.n} className="border-t border-line pt-5">
+                <span className="font-serif text-2xl text-accent-strong">{s.n}</span>
+                <h3 className="mt-2 font-semibold text-navy">{s.title}</h3>
+                <p className="mt-1 text-muted">{s.text}</p>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
       {/* Camera */}
-      <section className="bg-surface/60 border-y border-line">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20 grid gap-12 lg:grid-cols-2 lg:items-center">
-          <div>
-            <h2 className="font-serif text-3xl sm:text-4xl text-navy">Photograph a film. Get a read.</h2>
-            <p className="mt-4 text-muted max-w-md">
-              No scanner or PACS export needed. Hold your phone to a film on the lightbox and neatx-ray reads the photo. For the best result, shoot straight on, avoid glare and fill the frame.
-            </p>
-            <p className="mt-3 text-sm text-muted max-w-md">
-              Photos of films and screens carry less detail than original images, and the report says so when quality limits the reading.
-            </p>
-          </div>
-          <Photo src={phonePhoto} alt="A doctor photographing an X-ray film on a lightbox with a smartphone" />
-        </div>
-      </section>
-
-      {/* Features */}
-      <section id="features">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20">
-          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-            <h2 className="font-serif text-3xl sm:text-4xl text-navy max-w-md">Built for the way clinics actually work</h2>
-            <Photo src={teamPhoto} alt="Two doctors discussing a chest X-ray film at a lightbox" />
-          </div>
-          <div className="mt-14 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f) => (
-              <div key={f.title}>
-                <h3 className="font-semibold text-navy">{f.title}</h3>
-                <p className="mt-2 text-sm text-muted">{f.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Safety */}
-      <section id="safety" className="mx-auto max-w-6xl px-4 sm:px-6 py-20 grid gap-12 lg:grid-cols-2 lg:items-center border-t border-line">
-        <Photo src={portraitPhoto} alt="A doctor in a hospital corridor" />
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 py-20 grid gap-12 lg:grid-cols-2 lg:items-center">
         <div>
-          <h2 className="font-serif text-3xl sm:text-4xl text-navy">A second pair of eyes, never the final word</h2>
-          <p className="mt-5 text-muted">
-            AI can miss findings and can state things that are not there. neatx-ray is designed to support your review, not replace it: it shows its reasoning, labels its uncertainty, flags possibly urgent findings, and reminds you on every report that the clinical decision is yours.
+          <h2 className="font-serif text-3xl sm:text-4xl text-navy">Photograph a film. Get a read.</h2>
+          <p className="mt-4 max-w-md text-muted">
+            No scanner or PACS export needed. Hold your phone to a film on the lightbox and neatx-ray reads the photo. For the best result, shoot straight on, avoid glare and fill the frame.
           </p>
+          <p className="mt-3 max-w-md text-sm text-muted">
+            Photos of films and screens carry less detail than original images, and the report says so when quality limits the reading.
+          </p>
+        </div>
+        <Photo src={phonePhoto} alt="A doctor photographing an X-ray film on a lightbox with a smartphone" />
+      </section>
+
+      {/* Features: wide photo, then four plain rows */}
+      <section id="features" className="bg-surface/60 border-y border-line">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20">
+          <WidePhoto src={teamPhoto} alt="Two doctors discussing a chest X-ray film at a lightbox" />
+          <div className="mt-12 grid gap-10 lg:grid-cols-[1fr_1.5fr]">
+            <h2 className="font-serif text-3xl sm:text-4xl text-navy">Built for the way clinics actually work</h2>
+            <dl className="divide-y divide-line border-y border-line">
+              {FEATURES.map((f) => (
+                <div key={f.title} className="py-5">
+                  <dt className="font-semibold text-navy">{f.title}</dt>
+                  <dd className="mt-1 text-muted">{f.text}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      {/* Safety: a statement over a full-bleed photo */}
+      <section id="safety" className="relative isolate overflow-clip">
+        <Image src={portraitPhoto} alt="" fill sizes="100vw" placeholder="blur" className="-z-10 object-cover object-[78%_25%]" />
+        <div className="absolute inset-0 -z-10 bg-navy/80 lg:hidden" aria-hidden="true" />
+        <div className="absolute inset-0 -z-10 hidden bg-gradient-to-r from-navy via-navy/85 to-navy/10 lg:block" aria-hidden="true" />
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-24 sm:py-32">
+          <div className="max-w-xl text-white">
+            <h2 className="font-serif text-3xl sm:text-4xl">A second pair of eyes, never the final word</h2>
+            <p className="mt-5 text-white/85">
+              AI can miss findings and can state things that are not there. neatx-ray is designed to support your review, not replace it: it shows its reasoning, labels its uncertainty, flags possibly urgent findings, and reminds you on every report that the clinical decision is yours.
+            </p>
+          </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="mx-auto max-w-3xl px-4 sm:px-6 pb-20">
-        <h2 className="font-serif text-3xl text-navy text-center">Questions</h2>
-        <div className="mt-8 divide-y divide-line border-y border-line">
+      <section id="faq" className="mx-auto max-w-6xl px-4 sm:px-6 py-20 grid gap-10 lg:grid-cols-[1fr_1.6fr]">
+        <h2 className="font-serif text-3xl sm:text-4xl text-navy">Questions</h2>
+        <div className="divide-y divide-line border-y border-line">
           {FAQ.map((f) => (
             <details key={f.q} className="group">
               <summary className="cursor-pointer list-none flex min-h-[44px] items-center justify-between gap-4 py-4 font-medium text-navy">
