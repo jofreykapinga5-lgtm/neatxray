@@ -5,7 +5,7 @@ import Logo from "@/components/Logo";
 import AutoVideo from "@/components/AutoVideo";
 import NavMenu from "@/components/NavMenu";
 import phonePhoto from "@/assets/landing/tz-phone.jpg";
-import teamPhoto from "@/assets/landing/tz-team.jpg";
+import clinicPhoto from "@/assets/landing/tz-clinic.jpg";
 import portraitPhoto from "@/assets/landing/tz-portrait.jpg";
 import appScreenshot from "@/assets/landing/app-screenshot.jpg";
 
@@ -57,7 +57,7 @@ function WidePhoto({ src, alt }) {
       alt={alt}
       sizes="(min-width: 1152px) 1152px, 100vw"
       placeholder="blur"
-      className="aspect-[4/3] w-full rounded-3xl border border-line object-cover object-[50%_25%] shadow-[0_24px_60px_rgba(31,53,86,0.14)] sm:aspect-[21/9]"
+      className="aspect-[4/3] w-full rounded-3xl border border-line object-cover object-[50%_6%] shadow-[0_24px_60px_rgba(31,53,86,0.14)] sm:aspect-[21/9]"
     />
   );
 }
@@ -168,7 +168,7 @@ export default function Landing() {
       {/* Features: wide photo, then four plain rows */}
       <section id="features" className="bg-surface/60 border-y border-line">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 py-20">
-          <WidePhoto src={teamPhoto} alt="Two doctors discussing a chest X-ray film at a lightbox" />
+          <WidePhoto src={clinicPhoto} alt="Two doctors talking as they walk along a hospital walkway" />
           <div className="mt-12 grid gap-10 lg:grid-cols-[1fr_1.5fr]">
             <h2 className="font-serif text-3xl sm:text-4xl text-navy">Built for the way clinics actually work</h2>
             <dl className="divide-y divide-line border-y border-line">
