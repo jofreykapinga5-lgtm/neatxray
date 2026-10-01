@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+// Report shape: the answer first, everything else out of the way.
+// Older saved reports use a longer shape (observations, findings, ...); the viewers still read those.
 export const ReportSchema = z.object({
   image_type: z
     .enum(["xray", "other_medical", "not_medical"])
@@ -9,22 +11,40 @@ export const ReportSchema = z.object({
   image_type_note: z
     .string()
     .describe("One short sentence saying what the image is. For 'xray' use an empty string."),
-  region_and_view: z.string().describe("Body region and projection, e.g. 'Chest PA' or 'Left wrist, lateral'. Say 'Unclear' if not determinable."),
-  image_quality: z.object({
-    adequate: z.boolean(),
-    notes: z.string().describe("Positioning, exposure, artifacts, glare or photo-of-screen issues."),
-  }),
-  observations: z.array(z.string()).describe("Neutral descriptive observations, in order of relevance."),
-  findings: z.array(
-    z.object({
-      finding: z.string(),
-      location: z.string(),
-      confidence: z.enum(["likely", "possible", "unlikely"]),
-      reasoning: z.string().describe("Visible features supporting this, in one or two sentences."),
+  region_and_view: z
+    .string()
+    .describe("Body region and view in a few words, e.g. 'Left elbow, lateral'. Use 'Unclear' if it cannot be determined."),
+  impression: z
+    .string()
+    .describe(
+      "The single most useful conclusion as one direct sentence of at most 25 words: the most likely diagnosis, or 'No acute abnormality seen.' Plain wording, no hedging words; show uncertainty only through the confidence field."
+    ),
+  confidence: z
+    .enum(["likely", "possible", "unlikely"])
+    .describe("How confident you are in the impression exactly as written."),
+  urgency: z
+    .enum(["routine", "soon", "urgent"])
+    .describe("'urgent' if something may need action now (for example displaced fracture, pneumothorax, free air). 'soon' if it needs attention within days. Otherwise 'routine'."),
+  urgency_reason: z
+    .string()
+    .describe("One short sentence saying why. Empty string when urgency is 'routine'."),
+  key_findings: z
+    .array(z.string())
+    .describe("The 2 to 4 visible findings that support the impression, each under 15 words. Describe only what is seen. Do not list normal structures unless they matter."),
+  next_steps: z
+    .array(z.string())
+    .describe("1 to 3 concrete next steps, most important first, each under 15 words."),
+  details: z
+    .object({
+      image_quality: z
+        .string()
+        .describe("One short sentence, only if image quality limits the read. Empty string if the image is fine."),
+      also_considered: z
+        .array(z.string())
+        .describe("Up to 3 alternative diagnoses or pertinent negatives, each under 15 words. Empty array if none matter."),
+      limitations: z
+        .array(z.string())
+        .describe("Up to 2 short limitations. Empty array if none matter."),
     })
-  ),
-  urgent_attention: z.boolean().describe("True only if something appears potentially time-critical."),
-  urgent_reason: z.string().describe("Empty string unless urgent_attention is true."),
-  suggested_followup: z.array(z.string()),
-  limitations: z.array(z.string()).describe("What the AI cannot determine from these images."),
+    .describe("Secondary information. Keep it minimal; it is hidden behind a 'More detail' control."),
 });

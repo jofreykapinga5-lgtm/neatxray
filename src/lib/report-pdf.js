@@ -106,7 +106,7 @@ export async function downloadReportPdf({ report, meta = {}, imageUrl }) {
     y += noteH + 3;
   }
 
-  if (report.urgent_attention) {
+  if (!report.impression && report.urgent_attention) {
     ensure(16);
     y += 2;
     doc.setDrawColor(200, 60, 60);
@@ -119,6 +119,36 @@ export async function downloadReportPdf({ report, meta = {}, imageUrl }) {
     doc.setTextColor(140, 30, 30);
     doc.text(boxLines, margin + 3, y + 6);
     y += boxH + 3;
+  }
+
+  // Answer first (short report format)
+  if (report.impression) {
+    if (report.urgency === "urgent" || report.urgency === "soon") {
+      const urgent = report.urgency === "urgent";
+      ensure(16);
+      y += 2;
+      doc.setDrawColor(...(urgent ? [200, 60, 60] : [214, 158, 46]));
+      doc.setFillColor(...(urgent ? [253, 236, 236] : [255, 247, 222]));
+      const boxLines = doc.splitTextToSize(clean(`${urgent ? "Urgent" : "Needs attention soon"}: ${report.urgency_reason}`), width - 6);
+      const boxH = boxLines.length * 4.6 + 5;
+      doc.roundedRect(margin, y, width, boxH, 2, 2, "FD");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(...(urgent ? [140, 30, 30] : [122, 82, 0]));
+      doc.text(boxLines, margin + 3, y + 6);
+      y += boxH + 3;
+    }
+    heading("Impression");
+    write(report.impression, { size: 12.5, style: "bold", gap: 1 });
+    write(`${LABELS[report.confidence] || report.confidence}. ${report.region_and_view}`, { color: MUTED });
+    if (report.key_findings?.length) {
+      heading("Key findings");
+      bullets(report.key_findings);
+    }
+    if (report.next_steps?.length) {
+      heading("Next steps");
+      bullets(report.next_steps);
+    }
   }
 
   // Patient context
@@ -148,31 +178,45 @@ export async function downloadReportPdf({ report, meta = {}, imageUrl }) {
     y += h + 3;
   }
 
-  heading("Region and view");
-  write(report.region_and_view);
-  write(
-    `Image quality: ${report.image_quality.adequate ? "adequate" : "limited"}. ${report.image_quality.notes}`,
-    { color: MUTED }
-  );
-
-  heading("Observations");
-  bullets(report.observations);
-
-  heading("Possible findings");
-  if (!report.findings.length) {
-    write("No findings reported.", { color: MUTED });
-  } else {
-    for (const f of report.findings) {
-      write(`[${LABELS[f.confidence] || f.confidence}] ${f.finding} - ${f.location}`, { style: "bold", gap: 0.5 });
-      write(f.reasoning, { color: MUTED, indent: 4, gap: 2 });
+  if (report.impression) {
+    const d = report.details || {};
+    const more = [
+      d.image_quality ? `Image quality: ${d.image_quality}` : "",
+      ...(d.also_considered || []).map((o) => `Also considered: ${o}`),
+      ...(d.limitations || []).map((o) => `Limitation: ${o}`),
+    ].filter(Boolean);
+    if (more.length) {
+      heading("More detail");
+      bullets(more);
     }
+  } else {
+    heading("Region and view");
+    write(report.region_and_view);
+    write(
+      `Image quality: ${report.image_quality.adequate ? "adequate" : "limited"}. ${report.image_quality.notes}`,
+      { color: MUTED }
+    );
+
+    heading("Observations");
+    bullets(report.observations);
+
+    heading("Possible findings");
+    if (!report.findings.length) {
+      write("No findings reported.", { color: MUTED });
+    } else {
+      for (const f of report.findings) {
+        write(`[${LABELS[f.confidence] || f.confidence}] ${f.finding} - ${f.location}`, { style: "bold", gap: 0.5 });
+        write(f.reasoning, { color: MUTED, indent: 4, gap: 2 });
+      }
+    }
+
+    heading("Suggested follow-up");
+    bullets(report.suggested_followup);
+
+    heading("Limitations");
+    bullets(report.limitations);
+
   }
-
-  heading("Suggested follow-up");
-  bullets(report.suggested_followup);
-
-  heading("Limitations");
-  bullets(report.limitations);
 
   // Footer on every page
   const pages = doc.getNumberOfPages();
