@@ -152,17 +152,22 @@ export default function Landing() {
       </section>
 
       {/* Camera */}
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 py-20 grid gap-12 lg:grid-cols-2 lg:items-center">
-        <div>
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 py-20 grid gap-x-12 gap-y-8 lg:grid-cols-2 lg:items-center">
+        {/* On phones the photo sits between the two paragraphs; on large screens it is a column beside both. */}
+        <div className="lg:col-start-1 lg:row-start-1 lg:self-end">
           <h2 className="font-serif text-3xl sm:text-4xl text-navy">Photograph a film. Get a read.</h2>
           <p className="mt-4 max-w-md text-muted">
             No scanner or PACS export needed. Hold your phone to a film on the lightbox and neatx-ray reads the photo. For the best result, shoot straight on, avoid glare and fill the frame.
           </p>
-          <p className="mt-3 max-w-md text-sm text-muted">
-            Photos of films and screens carry less detail than original images, and the report says so when quality limits the reading.
-          </p>
         </div>
-        <Photo src={phonePhoto} alt="A doctor photographing an X-ray film on a lightbox with a smartphone" />
+        <Photo
+          src={phonePhoto}
+          alt="A doctor photographing an X-ray film on a lightbox with a smartphone"
+          className="lg:col-start-2 lg:row-span-2 lg:row-start-1"
+        />
+        <p className="max-w-md text-sm text-muted lg:col-start-1 lg:row-start-2 lg:self-start">
+          Photos of films and screens carry less detail than original images, and the report says so when quality limits the reading.
+        </p>
       </section>
 
       {/* Features: wide photo, then four plain rows */}
