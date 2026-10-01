@@ -31,9 +31,9 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen grid place-items-center px-4">
       <form onSubmit={onSubmit} className="w-full max-w-sm card p-8 space-y-5">
-        <div>
+        <div className="flex flex-col items-center text-center">
           <h1 className="sr-only">Sign in to neatx-ray</h1>
-          <Link href="/" aria-label="neatx-ray home"><Logo size={36} /></Link>
+          <Link href="/" aria-label="neatx-ray home" className="inline-flex min-h-[44px] items-center"><Logo size={36} /></Link>
           <p className="text-sm text-muted mt-1">AI decision support for doctors. Sign in to continue.</p>
         </div>
         <label className="block text-sm">
@@ -58,11 +58,11 @@ export default function LoginPage() {
             className="field mt-1"
           />
         </label>
-        {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+        {error && <p role="alert" className="text-center text-sm text-red-700">{error}</p>}
         <button type="submit" disabled={busy} className="btn-primary w-full">
           {busy ? "Signing in…" : "Sign in"}
         </button>
-        <p className="text-xs text-muted">Access is by invitation only.</p>
+        <p className="text-center text-xs text-muted">Access is by invitation only.</p>
       </form>
     </main>
   );
