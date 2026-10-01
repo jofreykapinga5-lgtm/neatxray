@@ -26,8 +26,6 @@ function List({ items }) {
 
 export function reportToText(r) {
   const lines = [
-    "neatx-ray AI decision support - not a diagnosis",
-    "",
     `Region / view: ${r.region_and_view}`,
     `Image quality: ${r.image_quality.adequate ? "Adequate" : "Limited"}. ${r.image_quality.notes}`,
     "",
@@ -43,14 +41,14 @@ export function reportToText(r) {
     "Limitations:",
     ...r.limitations.map((o) => `- ${o}`),
   ];
-  if (r.urgent_attention) lines.splice(2, 0, `URGENT: ${r.urgent_reason}`);
+  if (r.urgent_attention) lines.splice(0, 0, `URGENT: ${r.urgent_reason}`, "");
   if (r.image_type === "other_medical") {
-    lines.splice(2, 0, `NOTE: Not a plain X-ray; this tool is built for X-rays, so reliability is lower. ${r.image_type_note || ""}`.trim());
+    lines.splice(0, 0, `NOTE: Not a plain X-ray; this tool is built for X-rays, so reliability is lower. ${r.image_type_note || ""}`.trim(), "");
   }
   return lines.join("\n");
 }
 
-export default function ReportView({ report, provider, model, onDownload, hideActions = false }) {
+export default function ReportView({ report, onDownload, hideActions = false }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -63,10 +61,6 @@ export default function ReportView({ report, provider, model, onDownload, hideAc
 
   return (
     <div className="report-cascade space-y-5">
-      <p className="border-b border-line pb-3 text-sm text-navy/80">
-        <strong className="font-semibold">AI decision support, not a diagnosis.</strong> Confirm the findings yourself.
-      </p>
-
       {report.image_type === "other_medical" && (
         <div role="note" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
           <strong>This is not a plain X-ray.</strong> neatx-ray is built for X-rays, so this read may be less reliable.{" "}
@@ -118,23 +112,18 @@ export default function ReportView({ report, provider, model, onDownload, hideAc
         <List items={report.limitations} />
       </Section>
 
-      <div className="flex items-center justify-between gap-3 flex-wrap pt-2">
-        <span className="text-xs text-muted">
-          {provider} · {model}
-        </span>
-        {!hideActions && (
-          <div className="flex gap-2">
-            {onDownload && (
-              <button type="button" onClick={onDownload} className="btn-primary">
-                Download PDF
-              </button>
-            )}
-            <button type="button" onClick={copy} className="btn-ghost">
-              {copied ? "Copied" : "Copy report"}
+      {!hideActions && (
+        <div className="flex justify-end gap-2 pt-2">
+          {onDownload && (
+            <button type="button" onClick={onDownload} className="btn-primary">
+              Download PDF
             </button>
-          </div>
-        )}
-      </div>
+          )}
+          <button type="button" onClick={copy} className="btn-ghost">
+            {copied ? "Copied" : "Copy report"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -192,7 +192,7 @@ export default function Landing() {
           <div className="max-w-xl text-white">
             <h2 className="font-serif text-3xl sm:text-4xl">A second pair of eyes, never the final word</h2>
             <p className="mt-5 text-white/85">
-              AI can miss findings and can state things that are not there. neatx-ray is designed to support your review, not replace it: it shows its reasoning, labels its uncertainty, flags possibly urgent findings, and reminds you on every report that the clinical decision is yours.
+              AI can miss findings and can state things that are not there. neatx-ray is designed to support your review, not replace it: it shows its reasoning, labels its uncertainty, flags possibly urgent findings, and leaves every clinical decision to you.
             </p>
           </div>
         </div>

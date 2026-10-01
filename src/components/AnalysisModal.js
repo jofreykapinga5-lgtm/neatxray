@@ -173,7 +173,7 @@ export default function AnalysisModal({
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 py-5">
-              <ReportView report={result.report} provider={result.provider} model={result.model} hideActions />
+              <ReportView report={result.report} hideActions />
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line bg-surface px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">

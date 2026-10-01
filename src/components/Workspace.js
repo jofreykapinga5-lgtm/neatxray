@@ -291,8 +291,6 @@ export default function Workspace({ email }) {
           history: patient.history,
           question: patient.question,
           notes,
-          provider: result.provider,
-          model: result.model,
           createdAt: result.createdAt,
         },
       });
@@ -543,7 +541,7 @@ export default function Workspace({ email }) {
             <h2 className="font-serif text-2xl mb-4">Report</h2>
             <p className="sr-only" role="status">{result ? "Report ready" : busy ? statusText : ""}</p>
             {result ? (
-              <ReportView report={result.report} provider={result.provider} model={result.model} onDownload={downloadPdf} />
+              <ReportView report={result.report} onDownload={downloadPdf} />
             ) : (
               <p className="text-sm text-muted">
                 {busy ? statusText : "Add an X-ray and press Analyze. The AI report will appear here."}
