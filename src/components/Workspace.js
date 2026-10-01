@@ -9,11 +9,12 @@ import Viewer from "./Viewer";
 import ReportView from "./ReportView";
 import CameraCapture from "./CameraCapture";
 import AnalysisModal from "./AnalysisModal";
+import { composeNotes, splitNotes } from "@/lib/case-notes";
 
 const ANALYSIS_TIMEOUT_MS = 120000;
 const TIMEOUT_MESSAGE = "This is taking longer than expected. If the report finishes, it will appear in Recent cases.";
 
-const EMPTY_PATIENT = { age: "", sex: "", symptoms: "", history: "", question: "" };
+const EMPTY_PATIENT = { area: "", age: "", sex: "", symptoms: "", history: "", question: "" };
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false });
 const dateFormatWithYear = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
@@ -191,7 +192,7 @@ export default function Workspace({ email }) {
         .insert({
           user_id: user.id,
           label: label.trim(),
-          clinical_notes: notes.trim(),
+          clinical_notes: composeNotes(patient.area, notes),
           patient_age: patient.age === "" ? null : Number(patient.age),
           patient_sex: patient.sex,
           symptoms: patient.symptoms.trim(),
@@ -291,6 +292,7 @@ export default function Workspace({ email }) {
           history: patient.history,
           question: patient.question,
           notes,
+          area: patient.area,
           createdAt: result.createdAt,
         },
       });
@@ -312,8 +314,10 @@ export default function Workspace({ email }) {
     setImages(loaded);
     setIndex(0);
     setLabel(c.label || "");
-    setNotes(c.clinical_notes || "");
+    const saved = splitNotes(c.clinical_notes || "");
+    setNotes(saved.notes);
     setPatient({
+      area: saved.area,
       age: c.patient_age ?? "",
       sex: c.patient_sex || "",
       symptoms: c.symptoms || "",
@@ -354,6 +358,7 @@ export default function Workspace({ email }) {
   const hasImages = images.length > 0;
   const viewingSaved = images.some((i) => !i.blob);
   const detailsFilled = [
+    patient.area.trim() !== "",
     patient.age !== "",
     patient.sex !== "",
     patient.symptoms.trim() !== "",
@@ -458,8 +463,13 @@ export default function Workspace({ email }) {
                 </p>
               </details>
               <p className="text-xs text-muted">
-                Details added: {detailsFilled} of 5. Do not enter names, phone numbers or addresses.
+                Details added: {detailsFilled} of 6. Do not enter names, phone numbers or addresses.
               </p>
+              <label className="block text-sm">
+                <span>Area imaged</span>
+                <input className="field mt-1" value={patient.area} onChange={(e) => setP("area", e.target.value)} maxLength={120} placeholder="e.g. Left hand, little finger" />
+                <span className="mt-1 block text-xs text-muted">Tells the AI exactly where to look, so it does not guess the side or the finger.</span>
+              </label>
               <div className="grid grid-cols-2 gap-3">
                 <label className="block text-sm">
                   <span>Age</span>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { analyze } from "@/lib/ai";
+import { splitNotes } from "@/lib/case-notes";
 
 export const maxDuration = 300;
 
@@ -55,9 +56,10 @@ export async function POST(request) {
     const result = await analyze(
       {
         images,
-        notes: caseRow.clinical_notes,
+        notes: splitNotes(caseRow.clinical_notes).notes,
         label: caseRow.label,
         patient: {
+          area: splitNotes(caseRow.clinical_notes).area,
           age: caseRow.patient_age,
           sex: caseRow.patient_sex,
           symptoms: caseRow.symptoms,

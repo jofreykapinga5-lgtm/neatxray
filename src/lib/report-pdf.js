@@ -153,6 +153,7 @@ export async function downloadReportPdf({ report, meta = {}, imageUrl }) {
 
   // Patient context
   const ctx = [];
+  if (meta.area) ctx.push(`Area imaged: ${meta.area}`);
   if (meta.age !== null && meta.age !== undefined && meta.age !== "") ctx.push(`Age: ${meta.age}`);
   if (meta.sex) ctx.push(`Sex: ${meta.sex}`);
   if (meta.symptoms) ctx.push(`Main symptoms: ${meta.symptoms}`);

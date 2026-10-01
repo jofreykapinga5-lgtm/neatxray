@@ -13,7 +13,7 @@ export const ReportSchema = z.object({
     .describe("One short sentence saying what the image is. For 'xray' use an empty string."),
   region_and_view: z
     .string()
-    .describe("Body region and view in a few words, e.g. 'Left elbow, lateral'. Use 'Unclear' if it cannot be determined."),
+    .describe("Body region and view in a few words, e.g. 'Elbow, lateral'. Include the side or digit only if it is established; never guess it. Use 'Unclear' if it cannot be determined."),
   impression: z
     .string()
     .describe(
