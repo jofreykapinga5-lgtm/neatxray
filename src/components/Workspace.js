@@ -403,7 +403,7 @@ export default function Workspace({ email }) {
               <ul className="flex flex-wrap gap-2 text-xs">
                 {images.map((img, i) =>
                   img.blob ? (
-                    <li key={img.url} className="rounded-full border border-line pl-3 pr-1 flex items-center gap-1">
+                    <li key={img.url} className="motion-rise rounded-full border border-line pl-3 pr-1 flex items-center gap-1">
                       {img.name}
                       <button type="button" aria-label={`Remove ${img.name}`} onClick={() => removeImage(i)} className="grid h-11 w-11 place-items-center rounded-full text-base text-muted hover:text-navy">
                         ×
@@ -418,7 +418,7 @@ export default function Workspace({ email }) {
               <button
                 type="button"
                 onClick={goToDetails}
-                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3 text-left text-navy"
+                className="motion-rise flex w-full items-center justify-between gap-3 rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3 text-left text-navy"
               >
                 <span className="text-sm">
                   <strong>Image added.</strong> Next, add a few patient details.

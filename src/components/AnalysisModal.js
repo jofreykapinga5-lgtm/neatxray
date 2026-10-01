@@ -64,7 +64,7 @@ export default function AnalysisModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center bg-navy/60 sm:p-6"
+      className="motion-fade fixed inset-0 z-50 flex items-stretch sm:items-center justify-center bg-navy/60 sm:p-6"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && !working) onClose();
       }}
@@ -75,10 +75,10 @@ export default function AnalysisModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="analysis-title"
-        className="flex w-full max-w-3xl flex-col bg-surface outline-none sm:max-h-[92vh] sm:rounded-3xl sm:shadow-[0_30px_80px_rgba(31,53,86,0.35)] overflow-hidden"
+        className="motion-sheet flex w-full max-w-3xl flex-col bg-surface outline-none sm:max-h-[92vh] sm:rounded-3xl sm:shadow-[0_30px_80px_rgba(31,53,86,0.35)] overflow-hidden"
       >
         {working && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 py-16 text-center">
+          <div className="motion-fade flex flex-1 flex-col items-center justify-center gap-6 px-6 py-16 text-center">
             {thumb && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={thumb} alt="" className="h-20 w-20 rounded-xl border border-line object-cover" />
@@ -121,7 +121,7 @@ export default function AnalysisModal({
         )}
 
         {phase === "rejected" && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6 py-16 text-center">
+          <div className="motion-fade flex flex-1 flex-col items-center justify-center gap-5 px-6 py-16 text-center">
             <h2 id="analysis-title" className="font-serif text-2xl text-navy">
               This does not look like a medical image
             </h2>
@@ -141,7 +141,7 @@ export default function AnalysisModal({
         )}
 
         {phase === "error" && (
-          <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6 py-16 text-center">
+          <div className="motion-fade flex flex-1 flex-col items-center justify-center gap-5 px-6 py-16 text-center">
             <h2 id="analysis-title" className="font-serif text-2xl text-navy">
               The analysis did not finish
             </h2>

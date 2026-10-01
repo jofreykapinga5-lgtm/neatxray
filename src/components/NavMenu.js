@@ -50,7 +50,7 @@ export default function NavMenu({ cta }) {
       </div>
 
       {open && (
-        <div id="mobile-menu" className="md:hidden absolute left-4 right-4 top-full z-20 card p-2">
+        <div id="mobile-menu" className="motion-pop md:hidden absolute left-4 right-4 top-full z-20 card p-2">
           <ul>
             {LINKS.map((l) => (
               <li key={l.href}>

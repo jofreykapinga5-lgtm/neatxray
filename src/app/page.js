@@ -59,7 +59,7 @@ export default function Landing() {
   const cta = { href: "/app", label: "Scan now" };
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-clip">
       {/* Hero with video background */}
       <div className="relative isolate">
         <AutoVideo
@@ -81,13 +81,13 @@ export default function Landing() {
 
         <section className="mx-auto max-w-6xl px-4 sm:px-6 pt-16 pb-28 sm:pt-24 sm:pb-40">
           <div className="max-w-xl">
-            <h1 className="font-serif text-4xl sm:text-6xl leading-[1.05] text-navy">
+            <h1 className="motion-rise font-serif text-4xl sm:text-6xl leading-[1.05] text-navy">
               A calm second read on every <span className="whitespace-nowrap">X-ray.</span>
             </h1>
-            <p className="mt-5 text-lg text-navy/80">
+            <p className="motion-rise mt-5 text-lg text-navy/80" style={{ animationDelay: "90ms" }}>
               Upload a film, PDF or phone photo. Get a structured AI read in about a minute, with uncertainty spelled out.
             </p>
-            <div className="mt-8">
+            <div className="motion-rise mt-8" style={{ animationDelay: "180ms" }}>
               <Link href={cta.href} className="btn-primary inline-flex items-center">{cta.label}</Link>
             </div>
           </div>
@@ -97,12 +97,13 @@ export default function Landing() {
       {/* Product screenshot */}
       <section className="relative z-10 -mt-16 sm:-mt-28 px-4 sm:px-6 pb-20" aria-label="The neatx-ray app">
         <div className="mx-auto max-w-6xl">
-          <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_40px_90px_rgba(31,53,86,0.22)]">
+          <div className="overflow-clip rounded-2xl border border-line bg-surface shadow-[0_40px_90px_rgba(31,53,86,0.22)]">
             <div className="flex items-center gap-2 border-b border-line bg-[#f3f8fa] px-4 py-3" aria-hidden="true">
               <span className="h-3 w-3 rounded-full bg-[#f4a3a3]" />
               <span className="h-3 w-3 rounded-full bg-[#f2d48a]" />
               <span className="h-3 w-3 rounded-full bg-[#9fd9a6]" />
             </div>
+            <div className="relative">
             <Image
               src={appScreenshot}
               alt="The neatx-ray app showing a chest X-ray in the viewer and a structured AI report beside it"
@@ -112,6 +113,10 @@ export default function Landing() {
               placeholder="blur"
               className="block h-auto w-full"
             />
+            <div className="scan-region" aria-hidden="true">
+              <div className="scan-sweep" />
+            </div>
+            </div>
           </div>
           <p className="mt-4 text-center text-xs text-muted">Illustrative example with a sample image. Not a real patient.</p>
         </div>

@@ -50,8 +50,9 @@ export default function Viewer({ images, index, onSelect }) {
           <img
             src={current.url}
             alt={current.name}
+            key={current.url}
             draggable={false}
-            className="absolute inset-0 m-auto max-h-full max-w-full"
+            className="motion-fade absolute inset-0 m-auto max-h-full max-w-full"
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
               filter: `brightness(${brightness}%) contrast(${contrast}%) invert(${invert ? 1 : 0})`,

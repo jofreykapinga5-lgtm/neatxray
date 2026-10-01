@@ -65,7 +65,12 @@ body {
   font-weight: 600;
   min-height: 44px;
   cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
+  transition: background 0.15s, opacity 0.15s, transform 0.12s;
+}
+.btn-primary:active:not(:disabled),
+.btn-ghost:active,
+.btn-on-dark:active {
+  transform: scale(0.98);
 }
 .btn-primary {
   background: var(--navy);
@@ -131,6 +136,116 @@ body {
 .badge-possible { background: #fff1cf; color: #7a5200; }
 .badge-unlikely { background: #e6eef0; color: #48606b; }
 
+
+/* ------------------------------------------------------------------ motion */
+/* Confident deceleration for arrivals. Content is visible by default; animations only add an entrance. */
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes rise-soft {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes sheet-up {
+  from { transform: translateY(32px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes sheet-pop {
+  from { transform: scale(0.97); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes pop-down {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.motion-fade { animation: fade 0.3s ease-out both; }
+.motion-rise { animation: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.motion-pop { animation: pop-down 0.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.motion-sheet { animation: sheet-up 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@media (min-width: 640px) {
+  .motion-sheet { animation: sheet-pop 0.28s cubic-bezier(0.16, 1, 0.3, 1) both; }
+}
+
+/* A report arrives as a list: short cascade, capped at about 0.35 s in total. */
+.report-cascade > * { animation: rise-soft 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.report-cascade > :nth-child(2) { animation-delay: 50ms; }
+.report-cascade > :nth-child(3) { animation-delay: 100ms; }
+.report-cascade > :nth-child(4) { animation-delay: 150ms; }
+.report-cascade > :nth-child(5) { animation-delay: 200ms; }
+.report-cascade > :nth-child(6) { animation-delay: 250ms; }
+.report-cascade > :nth-child(n + 7) { animation-delay: 300ms; }
+
+/* The one authored moment: a scan line reads down the X-ray as the app screenshot scrolls past.
+   Tied to scroll position, so it never loops. Hidden where scroll-driven animation is unsupported. */
+.scan-region {
+  display: none;
+  position: absolute;
+  left: 7.3%;
+  top: 7.6%;
+  width: 41.9%;
+  height: 65.4%;
+  /* clip, not hidden: hidden would make this box its own scroll container and freeze the scroll timeline */
+  overflow: clip;
+  border-radius: 14px;
+  pointer-events: none;
+  /* the still outer box owns the timeline; the moving line only follows it */
+  view-timeline: --scan block;
+}
+.scan-sweep {
+  position: absolute;
+  inset: 0;
+  transform: translateY(-100%);
+  opacity: 0;
+  background: linear-gradient(to bottom, rgba(26, 167, 196, 0) 0%, rgba(26, 167, 196, 0.2) 100%);
+  border-bottom: 2px solid rgba(160, 238, 252, 0.95);
+  box-shadow: 0 6px 22px rgba(26, 167, 196, 0.55);
+}
+@keyframes scan-read {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { transform: translateY(0); opacity: 0; }
+}
+@supports (animation-timeline: view()) {
+  .scan-region { display: block; }
+  .scan-sweep {
+    animation: scan-read linear both;
+    animation-timeline: --scan;
+    animation-range: cover 12% cover 62%;
+  }
+}
+
+/* FAQ answers open smoothly where the browser supports animating to auto height. */
+:root { interpolate-size: allow-keywords; }
+details::details-content {
+  block-size: 0;
+  overflow: clip;
+  transition: block-size 0.3s cubic-bezier(0.16, 1, 0.3, 1), content-visibility 0.3s allow-discrete;
+}
+details[open]::details-content { block-size: auto; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* Reduced motion: no travel, no scaling, no decoration. Arrivals become short fades so changes stay legible. */
 @media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; animation: none !important; }
+  .motion-rise,
+  .motion-pop,
+  .motion-sheet,
+  .report-cascade > * {
+    animation: fade 0.2s ease-out both;
+    animation-delay: 0ms !important;
+  }
+  .scan-region { display: none !important; }
+  details::details-content { transition: none; }
+  .btn-primary:active:not(:disabled),
+  .btn-ghost:active,
+  .btn-on-dark:active { transform: none; }
 }
