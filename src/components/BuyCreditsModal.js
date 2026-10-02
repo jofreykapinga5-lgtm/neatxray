@@ -274,6 +274,17 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId, bal
 
           {phase === "waiting" && (
             <div className="space-y-3 py-10 text-center" aria-live="polite">
+              {/* A ring that keeps turning around a phone, so it is clear the app is still waiting for you. */}
+              <div className="relative mx-auto mb-2 h-16 w-16" aria-hidden="true">
+                <svg className="absolute inset-0 h-16 w-16 text-accent motion-safe:animate-spin" viewBox="0 0 50 50" fill="none">
+                  <circle cx="25" cy="25" r="20" stroke="currentColor" strokeOpacity="0.2" strokeWidth="4" />
+                  <path d="M25 5a20 20 0 0 1 20 20" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                </svg>
+                <svg className="absolute inset-0 m-auto h-6 w-6 text-navy" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="7" y="2" width="10" height="20" rx="2" />
+                  <path d="M11 18h2" />
+                </svg>
+              </div>
               <p className="text-xl font-bold text-navy">Check your phone</p>
               <p className="text-sm text-muted">
                 Approve the {pack ? tsh(pack.amount) : ""} payment on your phone. This window updates by itself.
