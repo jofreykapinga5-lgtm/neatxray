@@ -6,4 +6,5 @@ scikit-image
 torchxrayvision
 transformers>=4.50
 accelerate
+qwen-vl-utils
 huggingface_hub

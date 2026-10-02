@@ -16,6 +16,7 @@ from PIL import Image
 
 API_TOKEN = os.environ.get("GPU_API_TOKEN", "")
 MEDGEMMA_ID = os.environ.get("MEDGEMMA_ID", "google/medgemma-1.5-4b-it")
+LINGSHU_ID = os.environ.get("LINGSHU_ID", "lingshu-medical-mllm/Lingshu-7B")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 app = FastAPI()
@@ -40,6 +41,17 @@ def load_models():
         MEDGEMMA_ID, torch_dtype=torch.bfloat16, device_map=DEVICE
     ).eval()
 
+    # Optional second reader. If it fails to load, the rest of the service still works.
+    try:
+        from transformers import Qwen2_5_VLForConditionalGeneration
+
+        state["lingshu_processor"] = AutoProcessor.from_pretrained(LINGSHU_ID)
+        state["lingshu"] = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+            LINGSHU_ID, torch_dtype=torch.bfloat16, device_map=DEVICE
+        ).eval()
+    except Exception as err:  # noqa: BLE001
+        state["lingshu_error"] = str(err)
+
 
 def decode(b64: str) -> Image.Image:
     return Image.open(io.BytesIO(base64.b64decode(b64))).convert("RGB")
@@ -47,7 +59,13 @@ def decode(b64: str) -> Image.Image:
 
 @app.get("/health")
 def health():
-    return {"ok": "medgemma" in state, "device": DEVICE, "medgemma": MEDGEMMA_ID}
+    return {
+        "ok": "medgemma" in state,
+        "device": DEVICE,
+        "medgemma": MEDGEMMA_ID,
+        "lingshu": "lingshu" in state,
+        "lingshu_error": state.get("lingshu_error"),
+    }
 
 
 @app.post("/xrv", dependencies=[Depends(auth)])
@@ -108,6 +126,41 @@ async def medgemma(request: Request):
     return {
         "report": report,
         "raw": None if report else text,
+        "tokens": {"input": int(n_in), "output": int(gen.shape[-1] - n_in)},
+        "seconds": round(time.time() - started, 2),
+    }
+
+
+@app.post("/lingshu", dependencies=[Depends(auth)])
+async def lingshu(request: Request):
+    """Same body and reply as /medgemma, answered by Lingshu 7B."""
+    if "lingshu" not in state:
+        raise HTTPException(503, "Lingshu is not loaded")
+    body = await request.json()
+    images = [decode(b) for b in body["images"]]
+    system = body.get("system", "You are a radiology decision-support assistant.")
+    content = [{"type": "image"} for _ in images]
+    content.append({"type": "text", "text": body.get("context", "") + "\n\n" + JSON_SHAPE})
+    messages = [
+        {"role": "system", "content": [{"type": "text", "text": system}]},
+        {"role": "user", "content": content},
+    ]
+    proc = state["lingshu_processor"]
+    text = proc.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    inputs = proc(text=[text], images=images, return_tensors="pt").to(DEVICE)
+    n_in = inputs["input_ids"].shape[-1]
+    started = time.time()
+    with torch.inference_mode():
+        gen = state["lingshu"].generate(**inputs, max_new_tokens=900, do_sample=False)
+    out = proc.batch_decode(gen[:, n_in:], skip_special_tokens=True)[0]
+    match = re.search(r"\{.*\}", out, re.S)
+    try:
+        report = json.loads(match.group(0)) if match else None
+    except json.JSONDecodeError:
+        report = None
+    return {
+        "report": report,
+        "raw": None if report else out,
         "tokens": {"input": int(n_in), "output": int(gen.shape[-1] - n_in)},
         "seconds": round(time.time() - started, 2),
     }
