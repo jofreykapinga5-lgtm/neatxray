@@ -2,34 +2,51 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useDialogFocus } from "@/lib/use-dialog-focus";
-import { CREDIT_PACKS, CUSTOM_PACK_ID, MAX_CREDITS, MIN_CREDITS, NETWORKS, resolvePurchase, tsh } from "@/lib/credit-packs";
+import {
+  CREDIT_PACKS,
+  CUSTOM_PACK_ID,
+  MAX_CREDITS,
+  MIN_CREDITS,
+  NETWORKS,
+  PRICE_PER_CREDIT,
+  resolvePurchase,
+  tsh,
+} from "@/lib/credit-packs";
 
 const POLL_MS = 3000;
-const GIVE_UP_MS = 4 * 60 * 1000; // the provider expires an unapproved payment after a few hours; we stop waiting sooner
+const MAX_POLLS = 80; // 80 checks, 3 seconds apart: about 4 minutes. The provider expires an unapproved payment much later.
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export default function BuyCreditsModal({ onClose, onCredits, initialPackId }) {
+// A short note under each pack, in the spirit of "Starting out / Recommended".
+const TILE_NOTE = { p5: "Starting out", p20: "Recommended", p50: "High volume" };
+
+export default function BuyCreditsModal({ onClose, onCredits, initialPackId, balance = null }) {
   const dialogRef = useRef(null);
   const stoppedRef = useRef(false);
-  const customRef = useRef(null);
+  const amountRef = useRef(null);
+  const startPack = CREDIT_PACKS.find((p) => p.id === initialPackId);
+
   const [phase, setPhase] = useState("form"); // form | waiting | done | failed
-  const [packId, setPackId] = useState(initialPackId || CREDIT_PACKS[0].id);
-  const [custom, setCustom] = useState("");
+  const [tile, setTile] = useState(initialPackId ? (startPack ? startPack.id : CUSTOM_PACK_ID) : CREDIT_PACKS[1]?.id || CREDIT_PACKS[0].id);
+  const [amount, setAmount] = useState(startPack ? String(startPack.credits) : initialPackId ? "" : String(CREDIT_PACKS[1]?.credits || CREDIT_PACKS[0].credits));
   const [provider, setProvider] = useState(NETWORKS[0].id);
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [bought, setBought] = useState(null);
 
-  const pack = resolvePurchase(packId, custom); // null while a custom number is missing or out of range
+  // A typed number that equals a pack counts as that pack; anything else is a custom amount.
+  const matched = CREDIT_PACKS.find((p) => String(p.credits) === amount.trim());
+  const packId = matched ? matched.id : CUSTOM_PACK_ID;
+  const pack = resolvePurchase(packId, amount); // null while the number is missing or out of range
 
   useDialogFocus(dialogRef, () => {
     if (phase !== "waiting") onClose();
   });
 
-  // When opened from the "Custom" card, put the cursor in the amount box once the window has settled.
+  // Opened from "Custom": put the cursor in the amount box once the window has settled.
   useEffect(() => {
     if (initialPackId !== CUSTOM_PACK_ID) return;
-    const t = setTimeout(() => customRef.current?.focus(), 350);
+    const t = setTimeout(() => amountRef.current?.focus(), 350);
     return () => clearTimeout(t);
   }, [initialPackId]);
 
@@ -39,6 +56,24 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId }) {
       stoppedRef.current = true;
     };
   }, []);
+
+  function pickPack(p) {
+    setTile(p.id);
+    setAmount(String(p.credits));
+  }
+
+  function pickOther() {
+    setTile(CUSTOM_PACK_ID);
+    setAmount("");
+    amountRef.current?.focus();
+  }
+
+  function onAmount(value) {
+    const clean = value.replace(/[^\d]/g, "").slice(0, 4);
+    setAmount(clean);
+    const hit = CREDIT_PACKS.find((p) => String(p.credits) === clean);
+    setTile(hit ? hit.id : CUSTOM_PACK_ID);
+  }
 
   async function pay(e) {
     e.preventDefault();
@@ -53,13 +88,12 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId }) {
       const res = await fetch("/api/payments/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packId, credits: custom, provider, phone }),
+        body: JSON.stringify({ packId, credits: amount, provider, phone }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || "The payment could not be started.");
 
-      const started = Date.now();
-      while (!stoppedRef.current && Date.now() - started < GIVE_UP_MS) {
+      for (let attempt = 0; attempt < MAX_POLLS && !stoppedRef.current; attempt++) {
         await sleep(POLL_MS);
         const r = await fetch(`/api/payments/status?id=${body.purchaseId}`);
         const s = await r.json().catch(() => ({}));
@@ -83,6 +117,9 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId }) {
     }
   }
 
+  const tileClass = (active) =>
+    `cursor-pointer rounded-xl border p-3 text-left transition-colors ${active ? "border-accent bg-accent/10" : "border-line bg-white hover:border-accent/50"}`;
+
   return (
     <div
       className="motion-fade fixed inset-0 z-50 flex items-stretch justify-center bg-navy/60 sm:items-center sm:p-6"
@@ -96,120 +133,142 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="buy-title"
-        className="motion-sheet flex w-full max-w-lg flex-col overflow-hidden bg-surface outline-none sm:max-h-[92vh] sm:rounded-3xl sm:shadow-[0_30px_80px_rgba(31,53,86,0.35)]"
+        className="motion-sheet flex w-full max-w-[34rem] flex-col overflow-hidden bg-white outline-none sm:max-h-[94vh] sm:rounded-2xl sm:shadow-[0_30px_80px_rgba(31,53,86,0.35)]"
       >
-        <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
-          <h2 id="buy-title" className="font-serif text-2xl text-navy">
-            Buy credits
-          </h2>
-          {phase !== "waiting" && (
-            <button type="button" onClick={onClose} aria-label="Close" className="btn-ghost !px-3">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <path d="M6 6l12 12M18 6L6 18" />
-              </svg>
-            </button>
+        <div className="px-5 pb-1 pt-5 sm:px-6">
+          <div className="flex items-start justify-between gap-3">
+            <h2 id="buy-title" className="text-2xl font-bold tracking-tight text-navy">
+              Add credits
+            </h2>
+            {phase !== "waiting" && (
+              <button type="button" onClick={onClose} aria-label="Close" className="-mr-2 -mt-1 grid h-10 w-10 place-items-center rounded-full text-muted hover:text-navy">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+            )}
+          </div>
+          {balance !== null && (
+            <p className="text-sm text-muted">
+              Current balance: {balance} {balance === 1 ? "credit" : "credits"}
+            </p>
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-5">
+        <div className="flex-1 overflow-y-auto px-5 pb-6 pt-4 sm:px-6">
           {phase === "form" || phase === "failed" ? (
             <form onSubmit={pay} className="space-y-5">
-              <p className="text-sm text-muted">1 credit = 1 scan. Pay with mobile money; credits are added as soon as you approve on your phone.</p>
-
               {phase === "failed" && (
                 <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-900">
                   {error}
                 </p>
               )}
 
-              <fieldset className="space-y-2">
-                <legend className="text-sm font-semibold text-navy">Choose a pack</legend>
-                <div className="grid gap-2 sm:grid-cols-[repeat(auto-fit,minmax(9rem,1fr))]">
+              <fieldset>
+                <legend className="sr-only">Choose how many credits</legend>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {CREDIT_PACKS.map((p) => (
-                    <label
-                      key={p.id}
-                      className={`cursor-pointer rounded-2xl border p-3 text-center transition-colors ${packId === p.id ? "border-accent bg-accent/10" : "border-line hover:border-accent/50"}`}
-                    >
-                      <input type="radio" name="pack" value={p.id} checked={packId === p.id} onChange={() => setPackId(p.id)} className="sr-only" />
-                      <span className="block font-serif text-2xl text-navy">{p.credits}</span>
-                      <span className="block text-xs text-muted">credits</span>
-                      <span className="mt-1 block text-sm font-medium text-navy">{tsh(p.amount)}</span>
+                    <label key={p.id} className={tileClass(tile === p.id)}>
+                      <input type="radio" name="pack" value={p.id} checked={tile === p.id} onChange={() => pickPack(p)} className="sr-only" />
+                      <span className="block text-sm font-semibold text-navy">{p.credits} credits</span>
+                      <span className="mt-1.5 inline-block rounded-md bg-line px-1.5 py-0.5 text-[11px] text-muted">{TILE_NOTE[p.id] || tsh(p.amount)}</span>
                     </label>
                   ))}
+                  <label className={tileClass(tile === CUSTOM_PACK_ID)}>
+                    <input type="radio" name="pack" value={CUSTOM_PACK_ID} checked={tile === CUSTOM_PACK_ID} onChange={pickOther} className="sr-only" />
+                    <span className="block text-sm font-semibold text-navy">Other</span>
+                    <span className="mt-1.5 inline-block rounded-md bg-line px-1.5 py-0.5 text-[11px] text-muted">Your amount</span>
+                  </label>
                 </div>
-                <label
-                  className={`block cursor-pointer rounded-2xl border p-3 transition-colors ${packId === CUSTOM_PACK_ID ? "border-accent bg-accent/10" : "border-line hover:border-accent/50"}`}
-                >
-                  <input type="radio" name="pack" value={CUSTOM_PACK_ID} checked={packId === CUSTOM_PACK_ID} onChange={() => setPackId(CUSTOM_PACK_ID)} className="sr-only" />
-                  <span className="flex flex-wrap items-center justify-between gap-3">
-                    <span className="text-sm font-medium text-navy">Choose your own amount</span>
-                    <span className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        min={MIN_CREDITS}
-                        max={MAX_CREDITS}
-                        step="1"
-                        value={custom}
-                        onFocus={() => setPackId(CUSTOM_PACK_ID)}
-                        onChange={(e) => {
-                          setPackId(CUSTOM_PACK_ID);
-                          setCustom(e.target.value);
-                        }}
-                        placeholder={`${MIN_CREDITS}–${MAX_CREDITS}`}
-                        aria-label="Number of credits"
-                        ref={customRef}
-                        className="w-28 rounded-xl border border-line bg-bg px-3 py-2 text-base outline-none focus:border-accent"
-                      />
-                      <span className="text-sm text-muted">credits</span>
-                    </span>
+              </fieldset>
+
+              <div>
+                <label htmlFor="credit-amount" className="text-sm font-semibold text-navy">
+                  Enter amount{" "}
+                  <span className="font-normal text-muted">
+                    {MIN_CREDITS} credits minimum, {MAX_CREDITS} maximum
                   </span>
-                  {packId === CUSTOM_PACK_ID && (
-                    <span className="mt-2 block text-xs text-muted">
-                      {pack ? `${tsh(pack.amount)} for ${pack.credits} credits` : `Enter a whole number from ${MIN_CREDITS} to ${MAX_CREDITS}.`}
-                    </span>
-                  )}
                 </label>
-              </fieldset>
-
-              <fieldset className="space-y-2">
-                <legend className="text-sm font-semibold text-navy">Mobile money network</legend>
-                <div className="flex flex-wrap gap-2">
-                  {NETWORKS.map((n) => (
-                    <label
-                      key={n.id}
-                      className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition-colors ${provider === n.id ? "border-accent bg-accent/10 text-navy" : "border-line text-muted hover:border-accent/50"}`}
-                    >
-                      <input type="radio" name="network" value={n.id} checked={provider === n.id} onChange={() => setProvider(n.id)} className="sr-only" />
-                      {n.label}
-                    </label>
-                  ))}
+                <div className="relative mt-2">
+                  <input
+                    id="credit-amount"
+                    ref={amountRef}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    value={amount}
+                    onChange={(e) => onAmount(e.target.value)}
+                    onFocus={() => !matched && setTile(CUSTOM_PACK_ID)}
+                    className="field w-full pr-20 text-base"
+                    placeholder={String(MIN_CREDITS)}
+                  />
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted">credits</span>
                 </div>
-              </fieldset>
+              </div>
 
-              <label className="block space-y-1">
-                <span className="text-sm font-semibold text-navy">Phone number to pay from</span>
-                <input
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="0712 345 678"
-                  className="w-full rounded-xl border border-line bg-bg px-4 py-3 text-base outline-none focus:border-accent"
-                />
-              </label>
+              <div className="space-y-2.5 rounded-xl border border-line bg-bg p-4 text-sm">
+                <div className="flex justify-between text-muted">
+                  <span>Credits</span>
+                  <span>{pack ? pack.credits : "--"}</span>
+                </div>
+                <div className="flex justify-between text-muted">
+                  <span>Price per credit</span>
+                  <span>{tsh(PRICE_PER_CREDIT)}</span>
+                </div>
+                <div className="flex items-baseline justify-between border-t border-line pt-3">
+                  <span className="text-navy">Total due</span>
+                  <span className="text-xl font-bold text-navy">{pack ? tsh(pack.amount) : "TSh --"}</span>
+                </div>
+              </div>
 
-              <button type="submit" disabled={!pack} className="btn-primary w-full justify-center disabled:opacity-50">
-                {pack ? `Pay ${tsh(pack.amount)}` : "Choose how many credits"}
+              <div className="space-y-3">
+                <div>
+                  <label htmlFor="pay-network" className="text-sm font-semibold text-navy">
+                    Pay with
+                  </label>
+                  <select id="pay-network" value={provider} onChange={(e) => setProvider(e.target.value)} className="field mt-2 w-full text-base">
+                    {NETWORKS.map((n) => (
+                      <option key={n.id} value={n.id}>
+                        {n.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="pay-phone" className="text-sm font-semibold text-navy">
+                    Phone number
+                  </label>
+                  <input
+                    id="pay-phone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="0712 345 678"
+                    className="field mt-2 w-full text-base"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={!pack}
+                className="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-navy px-5 font-semibold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {pack ? `Buy ${pack.credits} credits` : "Buy 0 credits"}
               </button>
+
+              <p className="text-xs leading-relaxed text-muted">
+                Credits never expire, and one is used only when a report is produced. You will get a prompt on your phone to approve the payment.
+              </p>
             </form>
           ) : null}
 
           {phase === "waiting" && (
-            <div className="space-y-4 py-8 text-center" aria-live="polite">
-              <p className="font-serif text-2xl text-navy">Check your phone</p>
+            <div className="space-y-3 py-10 text-center" aria-live="polite">
+              <p className="text-xl font-bold text-navy">Check your phone</p>
               <p className="text-sm text-muted">
                 Approve the {pack ? tsh(pack.amount) : ""} payment on your phone. This window updates by itself. Please do not close it.
               </p>
@@ -217,8 +276,8 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId }) {
           )}
 
           {phase === "done" && (
-            <div className="space-y-4 py-8 text-center" aria-live="polite">
-              <p className="font-serif text-2xl text-navy">Payment received</p>
+            <div className="space-y-3 py-10 text-center" aria-live="polite">
+              <p className="text-xl font-bold text-navy">Payment received</p>
               <p className="text-sm text-muted">{bought} credits were added to your account.</p>
               <button type="button" onClick={onClose} className="btn-primary">
                 Continue

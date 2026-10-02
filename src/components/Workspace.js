@@ -641,7 +641,7 @@ export default function Workspace({ email, initialCredits = null }) {
           }}
         />
       )}
-      {buyOpen && <BuyCreditsModal onClose={() => setBuyOpen(false)} onCredits={setCredits} />}
+      {buyOpen && <BuyCreditsModal balance={credits} onClose={() => setBuyOpen(false)} onCredits={setCredits} />}
     </div>
   );
 }

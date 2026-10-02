@@ -81,9 +81,11 @@ body {
   -webkit-text-fill-color: var(--navy);
   box-shadow: 0 0 0 1000px #fff inset, 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
 }
-.field:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+.field:focus,
+.field:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 /* One visible keyboard focus ring for every link, button and summary. */
