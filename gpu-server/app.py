@@ -2,6 +2,7 @@
 
 Every route except /health needs the header  Authorization: Bearer <GPU_API_TOKEN>.
 """
+import ast
 import base64
 import io
 import json
@@ -55,6 +56,20 @@ def load_models():
 
 def decode(b64: str) -> Image.Image:
     return Image.open(io.BytesIO(base64.b64decode(b64))).convert("RGB")
+
+
+def parse_report(text: str):
+    """Pull the JSON object out of a model reply. Some models use single quotes, so fall back to literal_eval."""
+    match = re.search(r"\{.*\}", text, re.S)
+    if not match:
+        return None
+    for loader in (json.loads, ast.literal_eval):
+        try:
+            data = loader(match.group(0))
+            return data if isinstance(data, dict) else None
+        except (ValueError, SyntaxError):
+            continue
+    return None
 
 
 @app.get("/health")
@@ -118,11 +133,7 @@ async def medgemma(request: Request):
     with torch.inference_mode():
         gen = state["medgemma"].generate(**inputs, max_new_tokens=900, do_sample=False)
     text = proc.decode(gen[0][n_in:], skip_special_tokens=True)
-    match = re.search(r"\{.*\}", text, re.S)
-    try:
-        report = json.loads(match.group(0)) if match else None
-    except json.JSONDecodeError:
-        report = None
+    report = parse_report(text)
     return {
         "report": report,
         "raw": None if report else text,
@@ -153,11 +164,7 @@ async def lingshu(request: Request):
     with torch.inference_mode():
         gen = state["lingshu"].generate(**inputs, max_new_tokens=900, do_sample=False)
     out = proc.batch_decode(gen[:, n_in:], skip_special_tokens=True)[0]
-    match = re.search(r"\{.*\}", out, re.S)
-    try:
-        report = json.loads(match.group(0)) if match else None
-    except json.JSONDecodeError:
-        report = None
+    report = parse_report(out)
     return {
         "report": report,
         "raw": None if report else out,
