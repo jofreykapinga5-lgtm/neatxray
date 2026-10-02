@@ -48,7 +48,7 @@ export default function ResetPasswordPage() {
             {error}
           </p>
         )}
-        <button type="submit" disabled={busy} className="btn-primary w-full">
+        <button type="submit" disabled={busy} className="btn-primary auth-btn w-full">
           {busy ? "Saving…" : "Save password"}
         </button>
       </form>

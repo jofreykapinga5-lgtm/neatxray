@@ -57,7 +57,7 @@ function SignInForm() {
           <span className="h-px flex-1 bg-line" />
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-3.5">
           <label className="block text-sm">
             <span className="text-navy">Email</span>
             <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="field-pill mt-1" />
@@ -78,7 +78,7 @@ function SignInForm() {
               {error}
             </p>
           )}
-          <button type="submit" disabled={busy} className="btn-primary w-full">
+          <button type="submit" disabled={busy} className="btn-primary auth-btn w-full">
             {busy ? "Signing in…" : "Sign in"}
           </button>
         </form>

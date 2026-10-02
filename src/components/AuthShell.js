@@ -14,7 +14,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
 
       <main className="flex flex-1 items-start justify-center px-4 pb-16 pt-4 sm:items-center sm:pt-0">
         {/* No card: the form sits straight on the page. */}
-        <div className="w-full max-w-[26rem] space-y-6">
+        <div className="w-full max-w-[22rem] space-y-5">
           <div className="space-y-1 text-center">
             <h1 className="font-serif text-3xl text-navy sm:text-4xl">{title}</h1>
             {subtitle && <p className="text-sm text-muted">{subtitle}</p>}

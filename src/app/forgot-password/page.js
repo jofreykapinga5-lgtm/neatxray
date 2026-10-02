@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
           If an account exists for {email}, a reset link is on its way. Check your inbox and spam folder.
         </p>
       ) : (
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-3.5">
           <label className="block text-sm">
             <span className="text-navy">Email</span>
             <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="field-pill mt-1" />
@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
               {error}
             </p>
           )}
-          <button type="submit" disabled={busy} className="btn-primary w-full">
+          <button type="submit" disabled={busy} className="btn-primary auth-btn w-full">
             {busy ? "Sending…" : "Send reset link"}
           </button>
         </form>

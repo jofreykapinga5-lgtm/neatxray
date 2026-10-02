@@ -55,10 +55,11 @@ body {
 /* Rounded pill input used on the sign-in pages. */
 .field-pill {
   width: 100%;
-  min-height: 48px;
+  min-height: 40px;
+  font-size: 0.875rem;
   border: 1px solid var(--line-strong);
   border-radius: 9999px;
-  padding: 0.6rem 1.25rem;
+  padding: 0.4rem 1rem;
   background: #fff;
   color: var(--navy);
 }
@@ -86,6 +87,12 @@ body {
   min-height: 44px;
   cursor: pointer;
   transition: background 0.15s, opacity 0.15s, transform 0.12s;
+}
+/* Compact buttons for the sign-in pages. */
+.btn-primary.auth-btn {
+  min-height: 40px;
+  padding: 0.45rem 1rem;
+  font-size: 0.875rem;
 }
 .btn-primary:active:not(:disabled),
 .btn-ghost:active,
