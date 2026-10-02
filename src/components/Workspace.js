@@ -370,7 +370,6 @@ export default function Workspace({ email, initialCredits = null }) {
     patient.age !== "",
     patient.sex !== "",
     patient.symptoms.trim() !== "",
-    patient.history.trim() !== "",
     patient.question.trim() !== "",
   ].filter(Boolean).length;
 
@@ -476,7 +475,7 @@ export default function Workspace({ email, initialCredits = null }) {
             >
               <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-navy">
                 <span>
-                  Patient details <span className="font-normal text-muted">({detailsFilled} of 6 added)</span>
+                  Patient details <span className="font-normal text-muted">({detailsFilled} of 5 added)</span>
                 </span>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-muted transition-transform duration-200 group-open:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
               </summary>
@@ -489,7 +488,7 @@ export default function Workspace({ email, initialCredits = null }) {
                   Why each detail helps
                 </summary>
                 <p className="pb-2">
-                  Age, symptoms and history change which findings matter, and a clear clinical question tells it what you
+                  Age and symptoms change which findings matter, and a clear clinical question tells it what you
                   need to decide. With none, the report stays general. Everything here is optional.
                 </p>
               </details>
@@ -518,10 +517,6 @@ export default function Workspace({ email, initialCredits = null }) {
               <label className="block text-sm">
                 <span>Main symptoms</span>
                 <textarea className="field mt-1" rows={2} value={patient.symptoms} onChange={(e) => setP("symptoms", e.target.value)} maxLength={500} placeholder="e.g. cough for 3 days, fever, chest pain" />
-              </label>
-              <label className="block text-sm">
-                <span>Relevant history</span>
-                <textarea className="field mt-1" rows={2} value={patient.history} onChange={(e) => setP("history", e.target.value)} maxLength={500} placeholder="e.g. smoker, TB contact, prior surgery, known conditions" />
               </label>
               <label className="block text-sm">
                 <span>Clinical question</span>
