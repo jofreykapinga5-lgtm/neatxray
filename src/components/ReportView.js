@@ -186,7 +186,7 @@ function LegacyBody({ report }) {
   );
 }
 
-export default function ReportView({ report, onDownload, onCompare, hideActions = false }) {
+export default function ReportView({ report, onDownload, hideActions = false }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -213,11 +213,6 @@ export default function ReportView({ report, onDownload, onCompare, hideActions 
           {onDownload && (
             <button type="button" onClick={onDownload} className="btn-primary">
               Download PDF
-            </button>
-          )}
-          {onCompare && (
-            <button type="button" onClick={onCompare} className="btn-ghost">
-              Compare models
             </button>
           )}
           <button type="button" onClick={copy} className="btn-ghost">

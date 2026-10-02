@@ -2,7 +2,6 @@
 // Off until CREDITS_ENABLED=true, so the code can ship before the database tables exist.
 export const CREDITS_ENABLED = process.env.CREDITS_ENABLED === "true";
 export const SCAN_COST = Number(process.env.SCAN_CREDIT_COST || 1);
-export const COMPARE_COST = Number(process.env.COMPARE_CREDIT_COST || 5);
 export const OUT_OF_CREDITS = `You are out of credits. ${process.env.CREDITS_HELP_TEXT || "Buy more credits to continue."}`;
 
 // Own balance only: row-level security hides everyone else's. No row yet means zero.
