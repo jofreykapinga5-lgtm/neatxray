@@ -1,6 +1,6 @@
 // Credits: 1 credit = 1 scan. Everything is checked and charged on the server.
-// Off until CREDITS_ENABLED=true, so the code can ship before the database tables exist.
-export const CREDITS_ENABLED = process.env.CREDITS_ENABLED === "true";
+// On unless CREDITS_ENABLED=false (an emergency off switch). Needs supabase/credits.sql to have been run.
+export const CREDITS_ENABLED = process.env.CREDITS_ENABLED !== "false";
 export const SCAN_COST = Number(process.env.SCAN_CREDIT_COST || 1);
 export const OUT_OF_CREDITS = `You are out of credits. ${process.env.CREDITS_HELP_TEXT || "Buy more credits to continue."}`;
 

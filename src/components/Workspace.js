@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { prepareFiles } from "@/lib/prepare-files";
+import Link from "next/link";
 import Logo from "./Logo";
 import BuyCreditsModal from "./BuyCreditsModal";
 import Viewer from "./Viewer";
@@ -388,14 +389,13 @@ export default function Workspace({ email, initialCredits = null }) {
         <h1><Logo size={34} /></h1>
         <div className="flex items-center gap-3 text-sm">
           {credits !== null && (
-            <button
-              type="button"
-              onClick={() => setBuyOpen(true)}
+            <Link
+              href="/app/billing"
               className={`rounded-full border px-3 py-1.5 font-medium ${credits > 0 ? "border-line bg-surface text-navy" : "border-red-300 bg-red-50 text-red-900"}`}
-              title="1 credit = 1 scan. Tap to buy more."
+              title="1 credit = 1 scan. Open billing."
             >
-              {credits} {credits === 1 ? "credit" : "credits"} · Buy
-            </button>
+              {credits} {credits === 1 ? "credit" : "credits"} · Billing
+            </Link>
           )}
           <span className="hidden sm:inline text-muted">{email}</span>
           <button type="button" onClick={signOut} className="btn-ghost">Sign out</button>
