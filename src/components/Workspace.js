@@ -9,6 +9,7 @@ import Viewer from "./Viewer";
 import ReportView from "./ReportView";
 import CameraCapture from "./CameraCapture";
 import AnalysisModal from "./AnalysisModal";
+import CompareModal from "./CompareModal";
 import { composeNotes, splitNotes } from "@/lib/case-notes";
 
 const ANALYSIS_TIMEOUT_MS = 120000;
@@ -62,6 +63,8 @@ export default function Workspace({ email }) {
   const stoppedRef = useRef(false);
   const [notice, setNotice] = useState("");
   const [resumeCaseId, setResumeCaseId] = useState(null);
+  const [currentCaseId, setCurrentCaseId] = useState(null); // the case whose report is on screen
+  const [compareFor, setCompareFor] = useState(null);
 
   const busy = status !== "idle";
 
@@ -117,6 +120,7 @@ export default function Workspace({ email }) {
     setModalOpen(false);
     setNotice("");
     setResumeCaseId(null);
+    setCurrentCaseId(null);
     caseIdRef.current = null;
   }
 
@@ -164,6 +168,7 @@ export default function Workspace({ email }) {
     setProgress(100);
     setResult({ ...body, createdAt: new Date().toISOString() });
     setResumeCaseId(null);
+    setCurrentCaseId(caseId);
     loadHistory();
     await sleep(400);
     setPhase("done");
@@ -251,6 +256,12 @@ export default function Workspace({ email }) {
     }
   }
 
+  function openCompare() {
+    if (!currentCaseId) return;
+    setModalOpen(false);
+    setCompareFor(currentCaseId);
+  }
+
   function closeModal() {
     setModalOpen(false);
     setError("");
@@ -305,6 +316,7 @@ export default function Workspace({ email }) {
   async function openCase(c) {
     setError("");
     setNotice("");
+    setCurrentCaseId(c.id);
     const { data: rows } = await supabase.from("case_images").select("storage_path, original_name").eq("case_id", c.id).order("created_at");
     const loaded = [];
     for (const row of rows || []) {
@@ -551,7 +563,7 @@ export default function Workspace({ email }) {
             <h2 className="font-serif text-2xl mb-4">Report</h2>
             <p className="sr-only" role="status">{result ? "Report ready" : busy ? statusText : ""}</p>
             {result ? (
-              <ReportView report={result.report} onDownload={downloadPdf} />
+              <ReportView report={result.report} onDownload={downloadPdf} onCompare={currentCaseId ? openCompare : undefined} />
             ) : (
               <p className="text-sm text-muted">
                 {busy ? statusText : "Add an X-ray and press Analyze. The AI report will appear here."}
@@ -613,8 +625,11 @@ export default function Workspace({ email }) {
           onRetry={retryAnalysis}
           onStopWaiting={stopWaiting}
           onDownload={downloadPdf}
+          onCompare={currentCaseId ? openCompare : undefined}
         />
       )}
+
+      {compareFor && <CompareModal caseId={compareFor} onClose={() => setCompareFor(null)} />}
 
       {showCamera && (
         <CameraCapture

@@ -24,6 +24,7 @@ export default function AnalysisModal({
   onRetry,
   onStopWaiting,
   onDownload,
+  onCompare,
 }) {
   const dialogRef = useRef(null);
   const [copied, setCopied] = useState(false);
@@ -177,6 +178,11 @@ export default function AnalysisModal({
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line bg-surface px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              {onCompare && (
+                <button type="button" onClick={onCompare} className="btn-ghost">
+                  Compare models
+                </button>
+              )}
               <button type="button" onClick={copy} className="btn-ghost">
                 {copied ? "Copied" : "Copy"}
               </button>
