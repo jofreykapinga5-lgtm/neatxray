@@ -107,7 +107,7 @@ function ModelCard({ m, cheapest }) {
   );
 }
 
-export default function CompareModal({ caseId, onClose }) {
+export default function CompareModal({ caseId, onClose, onCredits }) {
   const dialogRef = useRef(null);
   const [phase, setPhase] = useState("loading"); // loading | done | error
   const [models, setModels] = useState([]);
@@ -140,6 +140,7 @@ export default function CompareModal({ caseId, onClose }) {
         if (!res.ok) throw new Error(body.error || "The comparison failed.");
         setModels(body.models);
         setXrv(body.xrv || null);
+        if (typeof body.credits === "number") onCredits?.(body.credits);
         setPhase("done");
       } catch (err) {
         if (controller.signal.aborted) return;
@@ -148,7 +149,7 @@ export default function CompareModal({ caseId, onClose }) {
       }
     })();
     return () => controller.abort();
-  }, [caseId]);
+  }, [caseId, onCredits]);
 
   const ok = models.filter((m) => m.ok);
   const cheapestId = ok.length ? ok.reduce((a, b) => (b.cost < a.cost ? b : a)).id : null;

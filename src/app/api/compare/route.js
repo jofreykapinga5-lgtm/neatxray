@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { chestScores, compareModels } from "@/lib/ai/compare";
 import { splitNotes } from "@/lib/case-notes";
+import { COMPARE_COST, CREDITS_ENABLED, OUT_OF_CREDITS, charge, getBalance } from "@/lib/credits";
 
 export const maxDuration = 300;
 
@@ -28,6 +29,17 @@ export async function POST(request) {
   const last = lastRun.get(user.id) || 0;
   if (Date.now() - last < COOLDOWN_MS) {
     return NextResponse.json({ error: "Please wait a few seconds before comparing again." }, { status: 429 });
+  }
+
+  if (CREDITS_ENABLED) {
+    try {
+      if ((await getBalance(supabase)) < COMPARE_COST) {
+        return NextResponse.json({ code: "no_credits", error: `Comparing models uses ${COMPARE_COST} credits. ${OUT_OF_CREDITS}` }, { status: 402 });
+      }
+    } catch (err) {
+      console.error("compare: could not read credits:", err?.message || err);
+      return NextResponse.json({ error: "Could not check your credits. Please try again." }, { status: 503 });
+    }
   }
 
   const { caseId } = await request.json().catch(() => ({}));
@@ -71,5 +83,14 @@ export async function POST(request) {
     },
   });
   const xrv = await chestScores(images, models);
-  return NextResponse.json({ models, xrv });
+  let credits;
+  if (CREDITS_ENABLED) {
+    try {
+      const paid = await charge(supabase, COMPARE_COST, "compare", `compare:${caseId}:${crypto.randomUUID()}`);
+      credits = paid.ok ? paid.balance : 0;
+    } catch (err) {
+      console.error("compare: could not charge credits:", err?.message || err);
+    }
+  }
+  return NextResponse.json({ models, xrv, credits });
 }

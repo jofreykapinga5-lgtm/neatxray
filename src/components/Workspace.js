@@ -35,7 +35,7 @@ function caseTitle(c) {
   return [region, who].filter(Boolean).join(", ") || "Untitled case";
 }
 
-export default function Workspace({ email }) {
+export default function Workspace({ email, initialCredits = null }) {
   const router = useRouter();
   const supabase = useRef(createClient()).current;
   const fileInput = useRef(null);
@@ -49,6 +49,7 @@ export default function Workspace({ email }) {
   const setP = (key, value) => setPatient((p) => ({ ...p, [key]: value }));
   const [status, setStatus] = useState("idle"); // idle | preparing | uploading | analyzing
   const [error, setError] = useState("");
+  const [credits, setCredits] = useState(initialCredits);
   const [messages, setMessages] = useState([]);
   const [result, setResult] = useState(null);
   const [showCamera, setShowCamera] = useState(false);
@@ -165,6 +166,7 @@ export default function Workspace({ email }) {
       return;
     }
     if (!res.ok) throw new Error(body.error || "Analysis failed.");
+    if (typeof body.credits === "number") setCredits(body.credits);
     setProgress(100);
     setResult({ ...body, createdAt: new Date().toISOString() });
     setResumeCaseId(null);
@@ -395,6 +397,14 @@ export default function Workspace({ email }) {
       <header className="mx-auto max-w-7xl px-4 sm:px-6 py-5 flex items-center justify-between gap-3">
         <h1><Logo size={34} /></h1>
         <div className="flex items-center gap-3 text-sm">
+          {credits !== null && (
+            <span
+              className={`rounded-full border px-3 py-1.5 font-medium ${credits > 0 ? "border-line bg-surface text-navy" : "border-red-300 bg-red-50 text-red-900"}`}
+              title="1 credit = 1 scan"
+            >
+              {credits} {credits === 1 ? "credit" : "credits"}
+            </span>
+          )}
           <span className="hidden sm:inline text-muted">{email}</span>
           <button type="button" onClick={signOut} className="btn-ghost">Sign out</button>
         </div>
@@ -629,7 +639,7 @@ export default function Workspace({ email }) {
         />
       )}
 
-      {compareFor && <CompareModal caseId={compareFor} onClose={() => setCompareFor(null)} />}
+      {compareFor && <CompareModal caseId={compareFor} onClose={() => setCompareFor(null)} onCredits={setCredits} />}
 
       {showCamera && (
         <CameraCapture
