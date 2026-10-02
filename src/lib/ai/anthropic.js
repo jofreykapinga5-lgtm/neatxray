@@ -3,7 +3,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { ReportSchema } from "./schema";
 import { SYSTEM_PROMPT, buildUserText } from "./prompt";
 
-export const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5-5";
+export const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
 
 export async function analyzeWithAnthropic({ images, notes, label, patient }) {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });

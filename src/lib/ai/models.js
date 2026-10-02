@@ -3,8 +3,8 @@
 export const COMPARE_MODELS = [
   { id: "claude-haiku-4-5", name: "Claude Haiku 4.5", note: "Smallest and cheapest", inputPerMTok: 1, outputPerMTok: 5, effort: false },
   { id: "claude-sonnet-5", name: "Claude Sonnet 5", note: "Mid-range", inputPerMTok: 2, outputPerMTok: 10, effort: true },
-  { id: "claude-sonnet-5-5", name: "Claude Sonnet 5.5", note: "Newest mid-range", inputPerMTok: 2, outputPerMTok: 10, effort: true },
-  { id: "claude-opus-5-5", name: "Claude Opus 5.5", note: "Used by neatx-ray today", inputPerMTok: 4, outputPerMTok: 20, effort: true },
+  { id: "claude-sonnet-5-5", name: "Claude Sonnet 5.5", note: "Used by neatx-ray today", inputPerMTok: 2, outputPerMTok: 10, effort: true },
+  { id: "claude-opus-5-5", name: "Claude Opus 5.5", note: "Strongest Opus tier", inputPerMTok: 4, outputPerMTok: 20, effort: true },
   { id: "claude-fable-5-1", name: "Claude Fable 5.1", note: "Most capable", inputPerMTok: 10, outputPerMTok: 50, effort: true },
 ];
 
