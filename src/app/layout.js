@@ -1,7 +1,7 @@
-import { Fraunces, Inter } from "next/font/google";
+import { Inter, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 
-const heading = Fraunces({ subsets: ["latin"], variable: "--font-heading" });
+const heading = Source_Serif_4({ subsets: ["latin"], variable: "--font-heading" });
 const body = Inter({ subsets: ["latin"], variable: "--font-body" });
 
 export const metadata = {

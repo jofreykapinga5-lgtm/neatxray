@@ -31,6 +31,12 @@ body {
   font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Headings: a sober serif, a little heavier and tighter than its default. */
+.font-serif {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
