@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { ReportSchema } from "./schema";
 import { SYSTEM_PROMPT, buildUserText } from "./prompt";
-import { COMPARE_MODELS, MEDGEMMA_MODEL, costOf } from "./models";
+import { COMPARE_MODELS, LINGSHU_MODEL, MEDGEMMA_MODEL, costOf } from "./models";
 
 // Runs the same film and the same instructions through one Claude model.
 async function runModel(client, model, { images, notes, label, patient }) {
@@ -39,8 +39,9 @@ async function runModel(client, model, { images, notes, label, patient }) {
 }
 
 // MedGemma on our GPU pod. Cost is the pod's hourly price for the seconds this scan used.
-async function runMedGemma({ images, notes, label, patient }) {
-  const res = await fetch(`${process.env.GPU_URL}/medgemma`, {
+async function runPodModel(model, { images, notes, label, patient }) {
+  const endpoint = model === LINGSHU_MODEL ? "lingshu" : "medgemma";
+  const res = await fetch(`${process.env.GPU_URL}/${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GPU_API_TOKEN}` },
     body: JSON.stringify({
@@ -57,7 +58,7 @@ async function runMedGemma({ images, notes, label, patient }) {
     report: body.report,
     seconds: body.seconds,
     tokens: body.tokens,
-    cost: (body.seconds * MEDGEMMA_MODEL.perHour) / 3600,
+    cost: (body.seconds * model.perHour) / 3600,
   };
 }
 
@@ -65,9 +66,9 @@ async function runMedGemma({ images, notes, label, patient }) {
 export async function compareModels(input) {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 240_000, maxRetries: 1 });
   const withPod = Boolean(process.env.GPU_URL && process.env.GPU_API_TOKEN);
-  const models = withPod ? [...COMPARE_MODELS, MEDGEMMA_MODEL] : COMPARE_MODELS;
+  const models = withPod ? [...COMPARE_MODELS, MEDGEMMA_MODEL, LINGSHU_MODEL] : COMPARE_MODELS;
   const settled = await Promise.allSettled(
-    models.map((m) => (m === MEDGEMMA_MODEL ? runMedGemma(input) : runModel(client, m, input)))
+    models.map((m) => (m.perHour ? runPodModel(m, input) : runModel(client, m, input)))
   );
   return models.map((m, i) => {
     const base = { id: m.id, name: m.name, note: m.note, inputPerMTok: m.inputPerMTok, outputPerMTok: m.outputPerMTok, perHour: m.perHour };

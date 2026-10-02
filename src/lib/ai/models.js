@@ -22,3 +22,10 @@ export const MEDGEMMA_MODEL = {
   note: "Medical model on our own GPU",
   perHour: 0.49,
 };
+
+export const LINGSHU_MODEL = {
+  id: "lingshu-7b",
+  name: "Lingshu 7B",
+  note: "Medical model on our own GPU",
+  perHour: 0.49,
+};

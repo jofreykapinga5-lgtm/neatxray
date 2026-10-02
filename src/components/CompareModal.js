@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useDialogFocus } from "@/lib/use-dialog-focus";
-import { COMPARE_MODELS, MEDGEMMA_MODEL } from "@/lib/ai/models";
+import { COMPARE_MODELS, LINGSHU_MODEL, MEDGEMMA_MODEL } from "@/lib/ai/models";
 
 const LABELS = { likely: "Likely", possible: "Possible", unlikely: "Unlikely" };
 
@@ -191,7 +191,7 @@ export default function CompareModal({ caseId, onClose }) {
             <div className="space-y-4 py-6" aria-live="polite">
               <p className="font-serif text-xl text-navy">Asking the models&hellip; this takes about a minute.</p>
               <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {[...COMPARE_MODELS, MEDGEMMA_MODEL].map((m) => (
+                {[...COMPARE_MODELS, MEDGEMMA_MODEL, LINGSHU_MODEL].map((m) => (
                   <li key={m.id} className="flex items-center justify-between rounded-xl border border-line bg-surface px-4 py-3 text-sm">
                     <span className="font-medium text-navy">{m.name}</span>
                     <span className="text-muted">{m.perHour ? `$${m.perHour}/hr` : `$${m.inputPerMTok} / $${m.outputPerMTok}`}</span>
