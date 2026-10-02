@@ -17,6 +17,14 @@ export async function POST(request) {
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   if (!CREDITS_ENABLED) return NextResponse.json({ error: "Credits are not enabled." }, { status: 400 });
 
+  // Without these secrets the payment cannot be recorded or sent. Say so clearly instead of crashing,
+  // and name the missing ones in the server log (Vercel > Logs) so they are quick to find.
+  const missing = ["PAYMENT_API_KEY", "SUPABASE_SERVICE_ROLE_KEY"].filter((name) => !process.env[name]);
+  if (missing.length) {
+    console.error(`checkout: payments are not set up. Missing environment variables: ${missing.join(", ")}`);
+    return NextResponse.json({ error: "Payments are not available yet. Please try again later.", code: "not_configured" }, { status: 503 });
+  }
+
   const { packId, credits, provider, phone } = await request.json().catch(() => ({}));
   const pack = resolvePurchase(packId, credits);
   if (!pack) {
