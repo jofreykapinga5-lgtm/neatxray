@@ -414,6 +414,7 @@ export default function Workspace({ email, initialCredits = null }) {
             onUpload={() => fileInput.current?.click()}
             onCamera={() => setShowCamera(true)}
             onFiles={addFiles}
+            onRemove={busy ? undefined : removeImage}
             busy={busy}
           />
         </div>
@@ -435,21 +436,6 @@ export default function Workspace({ email, initialCredits = null }) {
             {messages.map((m, i) => (
               <p key={i} className="text-sm text-amber-800">{m}</p>
             ))}
-
-            {images.some((i) => i.blob) && (
-              <ul className="flex flex-wrap gap-2 text-xs">
-                {images.map((img, i) =>
-                  img.blob ? (
-                    <li key={img.url} className="motion-rise rounded-full bg-white shadow-[0_1px_5px_rgba(31,53,86,0.14)] pl-3 pr-1 flex items-center gap-1">
-                      {img.name}
-                      <button type="button" aria-label={`Remove ${img.name}`} onClick={() => removeImage(i)} className="grid h-11 w-11 place-items-center rounded-full text-base text-muted hover:text-navy">
-                        ×
-                      </button>
-                    </li>
-                  ) : null
-                )}
-              </ul>
-            )}
 
             {hasImages && !viewingSaved && !busy && (
               <button

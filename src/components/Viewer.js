@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 
-export default function Viewer({ images, index, onSelect, onUpload, onCamera, onFiles, busy }) {
+export default function Viewer({ images, index, onSelect, onUpload, onCamera, onFiles, onRemove, busy }) {
   const [zoom, setZoom] = useState(1);
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
@@ -87,6 +87,20 @@ export default function Viewer({ images, index, onSelect, onUpload, onCamera, on
         onPointerCancel={onPointerUp}
         onWheel={onWheel}
       >
+        {onRemove && current?.blob && (
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => onRemove(index)}
+            aria-label="Remove this image"
+            title="Remove this image"
+            className="absolute right-3 top-3 z-10 grid h-10 w-10 cursor-pointer place-items-center rounded-full bg-black/55 text-white backdrop-blur transition-colors hover:bg-black/75"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+          </button>
+        )}
         {current && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -129,20 +143,33 @@ export default function Viewer({ images, index, onSelect, onUpload, onCamera, on
       {images.length > 1 && (
         <div className="flex gap-2 overflow-x-auto p-3 bg-black/30">
           {images.map((img, i) => (
-            <button
-              type="button"
-              key={img.url}
-              onClick={() => {
-                onSelect(i);
-                reset();
-              }}
-              aria-label={`Show image ${i + 1}`}
-              aria-current={i === index ? "true" : undefined}
-              className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 ${i === index ? "border-accent" : "border-transparent"}`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.url} alt="" className="h-full w-full object-cover" />
-            </button>
+            <div key={img.url} className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  onSelect(i);
+                  reset();
+                }}
+                aria-label={`Show image ${i + 1}`}
+                aria-current={i === index ? "true" : undefined}
+                className={`block h-16 w-16 overflow-hidden rounded-lg border-2 ${i === index ? "border-accent" : "border-transparent"}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img.url} alt="" className="h-full w-full object-cover" />
+              </button>
+              {onRemove && img.blob && (
+                <button
+                  type="button"
+                  onClick={() => onRemove(i)}
+                  aria-label={`Remove image ${i + 1}`}
+                  className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/65 text-white hover:bg-black/85"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}
