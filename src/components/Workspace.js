@@ -7,7 +7,6 @@ import { prepareFiles } from "@/lib/prepare-files";
 import AppShell from "./AppShell";
 import BuyCreditsModal from "./BuyCreditsModal";
 import Viewer from "./Viewer";
-import ReportView from "./ReportView";
 import CameraCapture from "./CameraCapture";
 import AnalysisModal from "./AnalysisModal";
 import { composeNotes, splitNotes } from "@/lib/case-notes";
@@ -341,6 +340,16 @@ export default function Workspace({ email, initialCredits = null }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  // The sidebar's Report item: bring the current report (or the running analysis) back on screen.
+  function openReport() {
+    if (result) {
+      setPhase("done");
+      setModalOpen(true);
+    } else if (busy) {
+      setModalOpen(true);
+    }
+  }
+
   async function deleteCase(c) {
     if (!window.confirm("Delete this case and its images permanently?")) return;
     const { data: rows } = await supabase.from("case_images").select("storage_path").eq("case_id", c.id);
@@ -376,10 +385,26 @@ export default function Workspace({ email, initialCredits = null }) {
   }
 
   return (
-    <AppShell email={email} credits={credits}>
+    <AppShell
+      email={email}
+      credits={credits}
+      report={{ state: result ? "ready" : busy ? "busy" : "none", onOpen: openReport }}
+      recents={{
+        items: history.map((c) => ({ id: c.id, title: caseTitle(c), when: caseWhen(c.created_at), hasReport: Boolean(c.report) })),
+        onOpen: (id) => {
+          const c = history.find((x) => x.id === id);
+          if (c) openCase(c);
+        },
+        onDelete: (id) => {
+          const c = history.find((x) => x.id === id);
+          if (c) deleteCase(c);
+        },
+      }}
+    >
 
       <main className="mx-auto max-w-6xl px-4 sm:px-6 pb-16 pt-6 grid gap-6 lg:grid-cols-2">
         <h1 className="sr-only">Scan an X-ray</h1>
+        <p className="sr-only" role="status">{result ? "Report ready" : busy ? statusText : ""}</p>
         <div className="min-w-0 space-y-4">
           <Viewer
             images={images}
@@ -390,7 +415,9 @@ export default function Workspace({ email, initialCredits = null }) {
             onFiles={addFiles}
             busy={busy}
           />
+        </div>
 
+        <div className="min-w-0">
           <div className="card p-4 space-y-4">
             <input
               ref={fileInput}
@@ -537,57 +564,6 @@ export default function Workspace({ email, initialCredits = null }) {
           </div>
         </div>
 
-        <div className="min-w-0 space-y-6">
-          <section className="card p-5 sm:p-6">
-            <h2 className="font-serif text-2xl mb-4">Report</h2>
-            <p className="sr-only" role="status">{result ? "Report ready" : busy ? statusText : ""}</p>
-            {result ? (
-              <ReportView report={result.report} onDownload={downloadPdf} />
-            ) : (
-              <p className="text-sm text-muted">
-                {busy ? statusText : "Add an X-ray and press Analyze. The AI report will appear here."}
-              </p>
-            )}
-          </section>
-
-          <section className="card p-5 sm:p-6">
-            <h2 className="font-serif text-xl mb-3">Recent cases</h2>
-            {history.length === 0 ? (
-              <p className="text-sm text-muted">No saved cases yet.</p>
-            ) : (
-              <ul className="divide-y divide-line">
-                {history.map((c) => (
-                  <li key={c.id} className="py-3 flex items-center justify-between gap-3 text-sm">
-                    <div className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">{caseTitle(c)}</span>
-                      <span className="block text-xs text-muted">
-                        {caseWhen(c.created_at)} · {c.report ? "Report ready" : "No report yet"}
-                      </span>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => openCase(c)}
-                        aria-label={`Open ${caseTitle(c)}`}
-                        className="btn-ghost !px-4 text-sm"
-                      >
-                        Open
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => deleteCase(c)}
-                        aria-label={`Delete ${caseTitle(c)}`}
-                        className="btn-ghost !px-3 text-sm !text-red-700"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </div>
       </main>
 
       {modalOpen && (

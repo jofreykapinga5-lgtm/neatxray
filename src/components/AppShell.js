@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { Fragment, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -69,7 +69,7 @@ const NAV = [
   },
 ];
 
-function SidebarContent({ email, credits, pathname, onNavigate, onSignOut, onCollapse }) {
+function SidebarContent({ email, credits, pathname, onNavigate, onSignOut, onCollapse, report, recents }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between gap-2 px-5 py-5">
@@ -89,12 +89,12 @@ function SidebarContent({ email, credits, pathname, onNavigate, onSignOut, onCol
         )}
       </div>
 
-      <nav aria-label="Main" className="flex-1 space-y-1 px-3">
+      <nav aria-label="Main" className="space-y-1 px-3">
         {NAV.map((item) => {
           const active = pathname === item.href;
           return (
+            <Fragment key={item.href}>
             <Link
-              key={item.href}
               href={item.href}
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
@@ -105,9 +105,71 @@ function SidebarContent({ email, credits, pathname, onNavigate, onSignOut, onCol
               {item.icon}
               {item.label}
             </Link>
+            {item.href === "/app" && report && (
+              <button
+                type="button"
+                disabled={report.state === "none"}
+                onClick={() => {
+                  report.onOpen();
+                  onNavigate();
+                }}
+                className="flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-muted transition-colors hover:bg-white/60 hover:text-navy disabled:cursor-default disabled:opacity-60 disabled:hover:bg-transparent disabled:hover:text-muted"
+              >
+                <Icon>
+                  <path d="M7 3h7l5 5v13H7z" />
+                  <path d="M14 3v5h5M10 13h6M10 17h6" />
+                </Icon>
+                <span className="flex-1">Report</span>
+                {report.state === "ready" && <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800">Ready</span>}
+                {report.state === "busy" && <span className="rounded-md bg-line px-1.5 py-0.5 text-[11px] text-muted">Working</span>}
+              </button>
+            )}
+            </Fragment>
           );
         })}
       </nav>
+
+      <div className="mt-5 flex min-h-0 flex-1 flex-col px-3">
+        {recents ? (
+          <>
+            <h2 className="px-3 text-xs font-medium uppercase tracking-wide text-muted">Recent cases</h2>
+            {recents.items.length === 0 ? (
+              <p className="px-3 pt-2 text-sm text-muted">No saved cases yet.</p>
+            ) : (
+              <ul className="mt-2 min-h-0 flex-1 space-y-0.5 overflow-y-auto pb-2">
+                {recents.items.map((c) => (
+                  <li key={c.id} className="group relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        recents.onOpen(c.id);
+                        onNavigate();
+                      }}
+                      title={c.title}
+                      className="block w-full rounded-xl px-3 py-2 pr-9 text-left transition-colors hover:bg-white/60"
+                    >
+                      <span className="block truncate text-sm text-navy">{c.title}</span>
+                      <span className="block truncate text-xs text-muted">
+                        {c.when} · {c.hasReport ? "Report ready" : "No report yet"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => recents.onDelete(c.id)}
+                      aria-label={`Delete ${c.title}`}
+                      className="absolute right-1 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-muted opacity-0 transition-opacity hover:text-red-700 focus:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+                    >
+                      <Icon>
+                        <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+                      </Icon>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        ) : null}
+      </div>
 
       <div className="space-y-3 px-3 pb-4">
         {credits !== null && (
@@ -138,7 +200,7 @@ function SidebarContent({ email, credits, pathname, onNavigate, onSignOut, onCol
 }
 
 // The signed-in frame: a left sidebar on desktop, a top bar with a menu button on phones.
-export default function AppShell({ email, credits = null, children }) {
+export default function AppShell({ email, credits = null, report = null, recents = null, children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -157,7 +219,7 @@ export default function AppShell({ email, credits = null, children }) {
     router.refresh();
   }
 
-  const content = { email, credits, pathname, onNavigate: () => setOpen(false), onSignOut: signOut };
+  const content = { email, credits, pathname, report, recents, onNavigate: () => setOpen(false), onSignOut: signOut };
 
   return (
     <div className={`min-h-screen transition-[padding] duration-200 ${collapsed ? "lg:pl-0 lg:pt-12" : "lg:pl-60"}`}>
