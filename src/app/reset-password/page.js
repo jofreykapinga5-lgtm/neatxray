@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import AuthShell from "@/components/AuthShell";
+import PasswordField from "@/components/PasswordField";
 
 // Reached from the reset link in the email. The link signs the doctor in, then they choose a new password.
 export default function ResetPasswordPage() {
@@ -33,15 +34,15 @@ export default function ResetPasswordPage() {
   return (
     <AuthShell title="Choose a new password" subtitle="You will be signed in right after.">
       <form onSubmit={onSubmit} className="space-y-4">
-        <label className="block text-sm">
-          <span className="text-navy">New password</span>
-          <input type="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="field mt-1" />
-          <span className="mt-1 block text-xs text-muted">At least 8 characters.</span>
-        </label>
-        <label className="block text-sm">
-          <span className="text-navy">Confirm new password</span>
-          <input type="password" required autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="field mt-1" />
-        </label>
+        <PasswordField
+          label="New password"
+          minLength={8}
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          hint="At least 8 characters."
+        />
+        <PasswordField label="Confirm new password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
         {error && (
           <p role="alert" className="text-center text-sm text-red-700">
             {error}

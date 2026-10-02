@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import AuthShell from "@/components/AuthShell";
 import GoogleButton from "@/components/GoogleButton";
+import PasswordField from "@/components/PasswordField";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -89,15 +90,15 @@ export default function SignUpPage() {
             <span className="text-navy">Email</span>
             <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="field mt-1" />
           </label>
-          <label className="block text-sm">
-            <span className="text-navy">Password</span>
-            <input type="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="field mt-1" />
-            <span className="mt-1 block text-xs text-muted">At least 8 characters.</span>
-          </label>
-          <label className="block text-sm">
-            <span className="text-navy">Confirm password</span>
-            <input type="password" required autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="field mt-1" />
-          </label>
+          <PasswordField
+            label="Password"
+            minLength={8}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            hint="At least 8 characters."
+          />
+          <PasswordField label="Confirm password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
           {error && (
             <p role="alert" className="text-center text-sm text-red-700">
               {error}

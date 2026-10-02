@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import AuthShell from "@/components/AuthShell";
 import GoogleButton from "@/components/GoogleButton";
+import PasswordField from "@/components/PasswordField";
 
 function SignInForm() {
   const router = useRouter();
@@ -61,15 +62,17 @@ function SignInForm() {
             <span className="text-navy">Email</span>
             <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="field mt-1" />
           </label>
-          <label className="block text-sm">
-            <span className="flex items-center justify-between text-navy">
-              Password
+          <PasswordField
+            label="Password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            labelRight={
               <Link href="/forgot-password" className="text-xs font-medium text-muted underline underline-offset-4 hover:text-navy">
                 Forgot password?
               </Link>
-            </span>
-            <input type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className="field mt-1" />
-          </label>
+            }
+          />
           {error && (
             <p role="alert" className="text-center text-sm text-red-700">
               {error}
