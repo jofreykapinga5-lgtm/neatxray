@@ -39,6 +39,7 @@ export default function Workspace({ email, initialCredits = null }) {
   const supabase = useRef(createClient()).current;
   const fileInput = useRef(null);
   const detailsRef = useRef(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const [images, setImages] = useState([]); // { blob, name, url }
   const [index, setIndex] = useState(0);
@@ -376,6 +377,7 @@ export default function Workspace({ email, initialCredits = null }) {
   function goToDetails() {
     const node = detailsRef.current;
     if (!node) return;
+    setDetailsOpen(true);
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     node.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
     // Only pop the keyboard on devices that have a real pointer; on phones it would cover the form.
@@ -466,8 +468,19 @@ export default function Workspace({ email, initialCredits = null }) {
               </button>
             )}
 
-            <fieldset ref={detailsRef} className="scroll-mt-4 space-y-3 rounded-xl border border-line p-3">
-              <legend className="px-1 text-sm font-semibold">Patient details</legend>
+            <details
+              ref={detailsRef}
+              open={detailsOpen}
+              onToggle={(e) => setDetailsOpen(e.currentTarget.open)}
+              className="scroll-mt-4 rounded-xl border border-line px-3"
+            >
+              <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-navy">
+                <span>
+                  Patient details <span className="font-normal text-muted">({detailsFilled} of 6 added)</span>
+                </span>
+                <span className="text-lg leading-none text-muted" aria-hidden="true">{detailsOpen ? "−" : "+"}</span>
+              </summary>
+              <div className="space-y-3 pb-3 pt-1">
               <p className="text-sm text-navy/90">
                 The AI reads the film together with what you tell it. More detail makes the report more specific and more useful.
               </p>
@@ -481,7 +494,7 @@ export default function Workspace({ email, initialCredits = null }) {
                 </p>
               </details>
               <p className="text-xs text-muted">
-                Details added: {detailsFilled} of 6. Do not enter names, phone numbers or addresses.
+                Do not enter names, phone numbers or addresses.
               </p>
               <label className="block text-sm">
                 <span>Area imaged</span>
@@ -514,7 +527,8 @@ export default function Workspace({ email, initialCredits = null }) {
                 <span>Clinical question</span>
                 <input className="field mt-1" value={patient.question} onChange={(e) => setP("question", e.target.value)} maxLength={300} placeholder="e.g. Any sign of pneumonia?" />
               </label>
-            </fieldset>
+              </div>
+            </details>
 
             <details className="rounded-xl border border-line px-3">
               <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-navy">
