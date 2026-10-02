@@ -23,6 +23,7 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId, bal
   const dialogRef = useRef(null);
   const stoppedRef = useRef(false);
   const amountRef = useRef(null);
+  const runRef = useRef(0); // which payment attempt is being watched; a new attempt or going back cancels the old watcher
   const startPack = CREDIT_PACKS.find((p) => p.id === initialPackId);
 
   const [phase, setPhase] = useState("form"); // form | waiting | done | failed
@@ -31,6 +32,7 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId, bal
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [bought, setBought] = useState(null);
+  const [slow, setSlow] = useState(false); // waiting a while with no answer: offer a way out
 
   // A typed number that equals a pack counts as that pack; anything else is a custom amount.
   const matched = CREDIT_PACKS.find((p) => String(p.credits) === amount.trim());
@@ -38,8 +40,24 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId, bal
   const pack = resolvePurchase(packId, amount); // null while the number is missing or out of range
 
   useDialogFocus(dialogRef, () => {
-    if (phase !== "waiting") onClose();
+    if (phase !== "waiting" || slow) onClose();
   });
+
+  // After 30 seconds with no answer, show help and a way out instead of trapping the doctor.
+  useEffect(() => {
+    if (phase !== "waiting") return;
+    const timer = setTimeout(() => setSlow(true), 30000);
+    return () => {
+      clearTimeout(timer);
+      setSlow(false);
+    };
+  }, [phase]);
+
+  function backToForm() {
+    runRef.current += 1; // stop watching the old attempt; if it is approved later, credits still arrive
+    setError("");
+    setPhase("form");
+  }
 
   // Opened from "Custom": put the cursor in the amount box once the window has settled.
   useEffect(() => {
@@ -81,6 +99,7 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId, bal
       setError(`Enter between ${MIN_CREDITS} and ${MAX_CREDITS} credits.`);
       return;
     }
+    const run = (runRef.current += 1);
     setPhase("waiting");
     try {
       const res = await fetch("/api/payments/checkout", {
@@ -91,7 +110,7 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId, bal
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || "The payment could not be started.");
 
-      for (let attempt = 0; attempt < MAX_POLLS && !stoppedRef.current; attempt++) {
+      for (let attempt = 0; attempt < MAX_POLLS && !stoppedRef.current && runRef.current === run; attempt++) {
         await sleep(POLL_MS);
         const r = await fetch(`/api/payments/status?id=${body.purchaseId}`);
         const s = await r.json().catch(() => ({}));
@@ -105,11 +124,11 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId, bal
           throw new Error("The payment was not completed. You have not been charged.");
         }
       }
-      if (!stoppedRef.current) {
+      if (!stoppedRef.current && runRef.current === run) {
         throw new Error("We did not see the payment yet. If money left your account, your credits will appear shortly. Check the credit count in the top bar.");
       }
     } catch (err) {
-      if (stoppedRef.current) return;
+      if (stoppedRef.current || runRef.current !== run) return;
       setError(err.message || "Something went wrong.");
       setPhase("failed");
     }
@@ -122,7 +141,7 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId, bal
     <div
       className="motion-fade fixed inset-0 z-50 flex items-stretch justify-center bg-navy/60 sm:items-center sm:p-6"
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget && phase !== "waiting") onClose();
+        if (e.target === e.currentTarget && (phase !== "waiting" || slow)) onClose();
       }}
     >
       <div
@@ -138,7 +157,7 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId, bal
             <h2 id="buy-title" className="text-2xl font-bold tracking-tight text-navy">
               Add credits
             </h2>
-            {phase !== "waiting" && (
+            {(phase !== "waiting" || slow) && (
               <button type="button" onClick={onClose} aria-label="Close" className="-mr-2 -mt-1 grid h-10 w-10 place-items-center rounded-full text-muted hover:text-navy">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                   <path d="M6 6l12 12M18 6L6 18" />
@@ -257,8 +276,24 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId, bal
             <div className="space-y-3 py-10 text-center" aria-live="polite">
               <p className="text-xl font-bold text-navy">Check your phone</p>
               <p className="text-sm text-muted">
-                Approve the {pack ? tsh(pack.amount) : ""} payment on your phone. This window updates by itself. Please do not close it.
+                Approve the {pack ? tsh(pack.amount) : ""} payment on your phone. This window updates by itself.
               </p>
+              {slow && (
+                <div className="space-y-3 pt-4">
+                  <p className="text-sm text-navy">
+                    No prompt yet? Check that the number has mobile money and a signal. The request stays open for about 10 minutes, so if you approve it
+                    later your credits are still added.
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <button type="button" onClick={backToForm} className="btn-primary">
+                      Try again
+                    </button>
+                    <button type="button" onClick={onClose} className="btn-ghost">
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
