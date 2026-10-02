@@ -53,7 +53,7 @@ export default async function BillingPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-5 sm:px-6">
+      <header className="flex w-full items-center justify-between gap-3 px-4 py-5 sm:px-8">
         <h1>
           <Link href="/app" aria-label="neatx-ray home">
             <Logo size={34} />
