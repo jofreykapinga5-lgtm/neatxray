@@ -27,7 +27,7 @@ export function normalizePhone(input) {
 }
 
 // Sends the customer a prompt on their phone to approve the payment.
-export async function createMobilePayment({ amount, provider, phone, email, metadata }) {
+export async function createMobilePayment({ amount, provider, phone, email, metadata, webhookUrl }) {
   const key = crypto.randomUUID().replace(/-/g, "").slice(0, 28); // the provider rejects keys over 30 characters
   return call("/v1/payments", {
     method: "POST",
@@ -37,6 +37,7 @@ export async function createMobilePayment({ amount, provider, phone, email, meta
       amount: { currency: "TZS", value: amount },
       channel: { type: "mobile_money", provider },
       customer: { phone, email, first_name: "Doctor", last_name: "neatx-ray" },
+      webhook_url: webhookUrl, // Snippe takes the webhook address with each payment
       metadata,
     }),
   });

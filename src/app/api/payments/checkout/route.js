@@ -42,6 +42,7 @@ export async function POST(request) {
       phone: normalized,
       email: user.email,
       metadata: { order_id: id, user_id: user.id, pack_id: pack.id },
+      webhookUrl: `${process.env.SITE_URL || new URL(request.url).origin}/api/payments/webhook`,
     });
     await admin.from("credit_purchases").update({ provider_ref: payment.reference ?? payment.id, status: "pending" }).eq("id", id);
     return NextResponse.json({ purchaseId: id });
