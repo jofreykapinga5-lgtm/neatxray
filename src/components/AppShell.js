@@ -83,7 +83,7 @@ function SidebarContent({ email, credits, pathname, onNavigate, onSignOut, onCol
             onClick={onCollapse}
             aria-label="Collapse sidebar"
             title="Collapse sidebar"
-            className="grid h-9 w-9 place-items-center rounded-lg text-muted transition-colors hover:bg-white/70 hover:text-navy"
+            className="grid h-9 w-9 place-items-center rounded-lg text-muted transition-colors hover:bg-bg hover:text-navy"
           >
             <PanelIcon />
           </button>
@@ -100,7 +100,7 @@ function SidebarContent({ email, credits, pathname, onNavigate, onSignOut, onCol
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className={`flex min-h-[44px] items-center gap-3 rounded-xl px-3 text-sm transition-colors ${
-                active ? "bg-white font-semibold text-navy shadow-[0_1px_2px_rgba(31,53,86,0.08)]" : "text-muted hover:bg-white/60 hover:text-navy"
+                active ? "bg-bg font-semibold text-navy" : "text-muted hover:bg-bg hover:text-navy"
               }`}
             >
               {item.icon}
@@ -114,7 +114,7 @@ function SidebarContent({ email, credits, pathname, onNavigate, onSignOut, onCol
                   report.onOpen();
                   onNavigate();
                 }}
-                className="flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-muted transition-colors hover:bg-white/60 hover:text-navy disabled:cursor-default disabled:opacity-60 disabled:hover:bg-transparent disabled:hover:text-muted"
+                className="flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-muted transition-colors hover:bg-bg hover:text-navy disabled:cursor-default disabled:opacity-60 disabled:hover:bg-transparent disabled:hover:text-muted"
               >
                 <Icon>
                   <path d="M7 3h7l5 5v13H7z" />
@@ -138,7 +138,7 @@ function SidebarContent({ email, credits, pathname, onNavigate, onSignOut, onCol
               onClick={() => setCasesOpen((o) => !o)}
               aria-expanded={casesOpen}
               aria-controls="recent-cases-list"
-              className="flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-muted transition-colors hover:bg-white/60 hover:text-navy"
+              className="flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-muted transition-colors hover:bg-bg hover:text-navy"
             >
               <Icon>
                 <circle cx="12" cy="12" r="9" />
@@ -163,7 +163,7 @@ function SidebarContent({ email, credits, pathname, onNavigate, onSignOut, onCol
                         onNavigate();
                       }}
                       title={c.title}
-                      className="block w-full rounded-xl px-3 py-2 pr-9 text-left transition-colors hover:bg-white/60"
+                      className="block w-full rounded-xl px-3 py-2 pr-9 text-left transition-colors hover:bg-bg"
                     >
                       <span className="block truncate text-sm text-navy">{c.title}</span>
                       <span className="block truncate text-xs text-muted">
@@ -193,7 +193,7 @@ function SidebarContent({ email, credits, pathname, onNavigate, onSignOut, onCol
           <Link
             href="/app/billing"
             onClick={onNavigate}
-            className={`block rounded-xl px-4 py-3 transition-colors ${credits > 0 ? "bg-white hover:bg-white/80" : "border border-red-300 bg-red-50"}`}
+            className={`block rounded-xl px-4 py-3 transition-colors ${credits > 0 ? "bg-bg hover:bg-bg/70" : "border border-red-300 bg-red-50"}`}
           >
             <span className="block text-xs text-muted">Credits</span>
             <span className={`block text-2xl font-bold tracking-tight ${credits > 0 ? "text-navy" : "text-red-900"}`}>{credits}</span>
@@ -239,11 +239,11 @@ export default function AppShell({ email, credits = null, report = null, recents
   const content = { email, credits, pathname, report, recents, onNavigate: () => setOpen(false), onSignOut: signOut };
 
   return (
-    <div className={`min-h-screen transition-[padding] duration-200 ${collapsed ? "lg:pl-0 lg:pt-12" : "lg:pl-60"}`}>
+    <div className={`min-h-screen bg-white transition-[padding] duration-200 ${collapsed ? "lg:pl-0 lg:pt-12" : "lg:pl-60"}`}>
       {/* Desktop sidebar */}
       <aside
         inert={collapsed}
-        className={`fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-line bg-white/50 transition-transform duration-200 lg:block ${collapsed ? "-translate-x-full" : ""}`}
+        className={`fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-line bg-white transition-transform duration-200 lg:block ${collapsed ? "-translate-x-full" : ""}`}
       >
         <SidebarContent {...content} onCollapse={() => writeCollapsed(true)} />
       </aside>
@@ -255,14 +255,14 @@ export default function AppShell({ email, credits = null, report = null, recents
           onClick={() => writeCollapsed(false)}
           aria-label="Open sidebar"
           title="Open sidebar"
-          className="fixed left-4 top-3 z-30 hidden h-9 w-9 place-items-center rounded-lg bg-white/80 text-muted shadow-[0_1px_2px_rgba(31,53,86,0.1)] transition-colors hover:text-navy lg:grid"
+          className="fixed left-4 top-3 z-30 hidden h-9 w-9 place-items-center rounded-lg bg-white text-muted shadow-[0_1px_2px_rgba(31,53,86,0.1)] transition-colors hover:text-navy lg:grid"
         >
           <PanelIcon />
         </button>
       )}
 
       {/* Phone top bar */}
-      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-bg/95 px-4 py-2 backdrop-blur lg:hidden">
+      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-white/95 px-4 py-2 backdrop-blur lg:hidden">
         <Link href="/app" aria-label="neatx-ray home" className="inline-flex min-h-[44px] items-center">
           <Logo size={30} />
         </Link>
@@ -271,7 +271,7 @@ export default function AppShell({ email, credits = null, report = null, recents
           onClick={() => setOpen(true)}
           aria-label="Open menu"
           aria-expanded={open}
-          className="grid h-11 w-11 place-items-center rounded-full text-navy hover:bg-white/60"
+          className="grid h-11 w-11 place-items-center rounded-full text-navy hover:bg-bg"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
             <path d="M4 7h16M4 12h16M4 17h16" />
@@ -283,7 +283,7 @@ export default function AppShell({ email, credits = null, report = null, recents
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <button type="button" aria-label="Close menu" onClick={() => setOpen(false)} className="absolute inset-0 bg-navy/50" />
-          <aside className="motion-sheet absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-bg shadow-[0_0_40px_rgba(31,53,86,0.25)]">
+          <aside className="motion-sheet absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-[0_0_40px_rgba(31,53,86,0.25)]">
             <SidebarContent {...content} />
           </aside>
         </div>

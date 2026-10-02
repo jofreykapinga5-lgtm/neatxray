@@ -5,7 +5,7 @@ import Logo from "./Logo";
 // the form centred below it.
 export default function AuthShell({ title, subtitle, children, footer }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-white">
       <header className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6">
         <Link href="/" aria-label="neatx-ray home" className="inline-flex min-h-[44px] items-center">
           <Logo size={34} />
