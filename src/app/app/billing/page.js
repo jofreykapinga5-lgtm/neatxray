@@ -12,9 +12,9 @@ const dayOf = (iso) => new Date(new Date(iso).getTime() + EAT_MS).toISOString().
 
 export default async function BillingPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // The proxy has already verified the sign-in; read the token locally instead of a second network call.
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims;
   if (!user) redirect("/login");
   if (!CREDITS_ENABLED) redirect("/app");
 
@@ -32,7 +32,7 @@ export default async function BillingPage() {
       .from("credit_ledger")
       .select("id, delta, reason, created_at")
       .order("created_at", { ascending: false })
-      .limit(500)
+      .limit(300)
       .then((r) => r.data || []),
   ]);
 

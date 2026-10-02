@@ -26,10 +26,10 @@ export async function proxy(request) {
     }
   );
 
-  // Validates the session with Supabase and refreshes cookies when needed.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Checks the session and refreshes cookies when needed. getClaims verifies the sign-in token here on the
+  // server instead of asking Supabase over the network on every click, which is what made pages slow.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const user = claimsData?.claims ?? null;
 
   const { pathname } = request.nextUrl;
   const isPublic = pathname === "/" || PUBLIC_PATHS.some((p) => pathname.startsWith(p));

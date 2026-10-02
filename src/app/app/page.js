@@ -5,9 +5,9 @@ import { CREDITS_ENABLED, getBalance } from "@/lib/credits";
 
 export default async function Home() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // The proxy has already verified the sign-in; read the token locally instead of a second network call.
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims;
   if (!user) redirect("/login");
   let credits = null;
   if (CREDITS_ENABLED) {
