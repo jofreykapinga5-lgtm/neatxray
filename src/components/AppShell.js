@@ -70,6 +70,7 @@ const NAV = [
 ];
 
 function SidebarContent({ email, credits, pathname, onNavigate, onSignOut, onCollapse, report, recents }) {
+  const [casesOpen, setCasesOpen] = useState(true);
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between gap-2 px-5 py-5">
@@ -132,11 +133,27 @@ function SidebarContent({ email, credits, pathname, onNavigate, onSignOut, onCol
       <div className="mt-5 flex min-h-0 flex-1 flex-col px-3">
         {recents ? (
           <>
-            <h2 className="px-3 text-xs font-medium uppercase tracking-wide text-muted">Recent cases</h2>
-            {recents.items.length === 0 ? (
-              <p className="px-3 pt-2 text-sm text-muted">No saved cases yet.</p>
+            <button
+              type="button"
+              onClick={() => setCasesOpen((o) => !o)}
+              aria-expanded={casesOpen}
+              aria-controls="recent-cases-list"
+              className="flex min-h-[44px] w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-muted transition-colors hover:bg-white/60 hover:text-navy"
+            >
+              <Icon>
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v5l3 2" />
+              </Icon>
+              <span className="flex-1">Recent cases</span>
+              {recents.items.length > 0 && <span className="rounded-md bg-line px-1.5 py-0.5 text-[11px] text-muted">{recents.items.length}</span>}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`transition-transform ${casesOpen ? "rotate-180" : ""}`}>
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            {!casesOpen ? null : recents.items.length === 0 ? (
+              <p id="recent-cases-list" className="px-3 pt-1 text-sm text-muted">No saved cases yet.</p>
             ) : (
-              <ul className="mt-2 min-h-0 flex-1 space-y-0.5 overflow-y-auto pb-2">
+              <ul id="recent-cases-list" className="mt-1 min-h-0 flex-1 space-y-0.5 overflow-y-auto pb-2">
                 {recents.items.map((c) => (
                   <li key={c.id} className="group relative">
                     <button
