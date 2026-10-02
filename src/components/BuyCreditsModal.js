@@ -12,7 +12,7 @@ export default function BuyCreditsModal({ onClose, onCredits }) {
   const dialogRef = useRef(null);
   const stoppedRef = useRef(false);
   const [phase, setPhase] = useState("form"); // form | waiting | done | failed
-  const [packId, setPackId] = useState(CREDIT_PACKS[1]?.id || CREDIT_PACKS[0].id);
+  const [packId, setPackId] = useState(CREDIT_PACKS[0].id);
   const [provider, setProvider] = useState(NETWORKS[0].id);
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
@@ -110,7 +110,7 @@ export default function BuyCreditsModal({ onClose, onCredits }) {
 
               <fieldset className="space-y-2">
                 <legend className="text-sm font-semibold text-navy">Choose a pack</legend>
-                <div className="grid gap-2 sm:grid-cols-3">
+                <div className="grid gap-2 sm:grid-cols-[repeat(auto-fit,minmax(9rem,1fr))]">
                   {CREDIT_PACKS.map((p) => (
                     <label
                       key={p.id}

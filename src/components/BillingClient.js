@@ -13,7 +13,7 @@ const STATUS_LABEL = {
   expired: "Expired",
 };
 
-const REASON_LABEL = { scan: "Scan", purchase: "Credits bought", "launch bonus": "Launch bonus", test: "Test credits" };
+const REASON_LABEL = { scan: "Scan", purchase: "Credits bought", welcome: "Welcome bonus", "launch bonus": "Launch bonus", test: "Test credits" };
 
 const when = (iso) =>
   new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -50,7 +50,7 @@ export default function BillingClient({ initialBalance, scanCost, email, purchas
       <section className="card p-5 sm:p-6">
         <h2 className="font-serif text-2xl text-navy">Pricing</h2>
         <p className="mt-1 text-sm text-muted">Pay with mobile money. Credits never expire. A credit is used only when a report is produced.</p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]">
           {CREDIT_PACKS.map((p) => (
             <div key={p.id} className="rounded-2xl border border-line p-4 text-center">
               <p className="font-serif text-4xl text-navy">{p.credits}</p>
