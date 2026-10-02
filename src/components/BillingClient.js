@@ -18,7 +18,7 @@ const REASON_LABEL = { scan: "Scan", purchase: "Credits bought", welcome: "Welco
 const when = (iso) =>
   new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
-const networkName = (id) => NETWORKS.find((n) => n.id === id)?.label || id;
+const networkName = (id) => NETWORKS.find((n) => n.id === id)?.label || "Mobile money";
 
 function StatCard({ label, children, action, note }) {
   return (

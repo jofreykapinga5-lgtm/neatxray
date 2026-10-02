@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CREDITS_ENABLED } from "@/lib/credits";
-import { MAX_CREDITS, MIN_CREDITS, NETWORKS, resolvePurchase } from "@/lib/credit-packs";
+import { MAX_CREDITS, MIN_CREDITS, resolvePurchase } from "@/lib/credit-packs";
 import { closePurchase } from "@/lib/purchases";
 import { createMobilePayment, normalizePhone } from "@/lib/snippe";
 import { clientIp, limitKey, limitUser, tooMany } from "@/lib/rate-limit";
@@ -25,12 +25,11 @@ export async function POST(request) {
     return NextResponse.json({ error: "Payments are not available yet. Please try again later.", code: "not_configured" }, { status: 503 });
   }
 
-  const { packId, credits, provider, phone } = await request.json().catch(() => ({}));
+  const { packId, credits, phone } = await request.json().catch(() => ({}));
   const pack = resolvePurchase(packId, credits);
   if (!pack) {
     return NextResponse.json({ error: `Choose a pack, or enter between ${MIN_CREDITS} and ${MAX_CREDITS} credits.` }, { status: 400 });
   }
-  if (!NETWORKS.some((n) => n.id === provider)) return NextResponse.json({ error: "Choose a mobile money network." }, { status: 400 });
   const normalized = normalizePhone(phone);
   if (!normalized) return NextResponse.json({ error: "Enter a valid Tanzanian phone number, for example 0712 345 678." }, { status: 400 });
 
@@ -46,7 +45,7 @@ export async function POST(request) {
   const id = crypto.randomUUID();
   const { error: insertError } = await admin
     .from("credit_purchases")
-    .insert({ id, user_id: user.id, pack_id: pack.id, credits: pack.credits, amount: pack.amount, provider });
+    .insert({ id, user_id: user.id, pack_id: pack.id, credits: pack.credits, amount: pack.amount, provider: "mobile" }); // Snippe picks the network from the phone number
   if (insertError) {
     console.error("checkout: could not record purchase:", insertError.message);
     return NextResponse.json({ error: "Could not start the payment. Please try again." }, { status: 503 });
@@ -55,7 +54,6 @@ export async function POST(request) {
   try {
     const payment = await createMobilePayment({
       amount: pack.amount,
-      provider,
       phone: normalized,
       email: user.email,
       metadata: { order_id: id, user_id: user.id, pack_id: pack.id },

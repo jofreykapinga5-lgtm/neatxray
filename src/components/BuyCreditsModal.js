@@ -7,7 +7,6 @@ import {
   CUSTOM_PACK_ID,
   MAX_CREDITS,
   MIN_CREDITS,
-  NETWORKS,
   PRICE_PER_CREDIT,
   resolvePurchase,
   tsh,
@@ -29,7 +28,6 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId, bal
   const [phase, setPhase] = useState("form"); // form | waiting | done | failed
   const [tile, setTile] = useState(initialPackId ? (startPack ? startPack.id : CUSTOM_PACK_ID) : CREDIT_PACKS[1]?.id || CREDIT_PACKS[0].id);
   const [amount, setAmount] = useState(startPack ? String(startPack.credits) : initialPackId ? "" : String(CREDIT_PACKS[1]?.credits || CREDIT_PACKS[0].credits));
-  const [provider, setProvider] = useState(NETWORKS[0].id);
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [bought, setBought] = useState(null);
@@ -88,7 +86,7 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId, bal
       const res = await fetch("/api/payments/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packId, credits: amount, provider, phone }),
+        body: JSON.stringify({ packId, credits: amount, phone }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || "The payment could not be started.");
@@ -223,20 +221,8 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId, bal
 
               <div className="space-y-3">
                 <div>
-                  <label htmlFor="pay-network" className="text-sm font-semibold text-navy">
-                    Pay with
-                  </label>
-                  <select id="pay-network" value={provider} onChange={(e) => setProvider(e.target.value)} className="field mt-2 w-full text-base">
-                    {NETWORKS.map((n) => (
-                      <option key={n.id} value={n.id}>
-                        {n.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
                   <label htmlFor="pay-phone" className="text-sm font-semibold text-navy">
-                    Phone number
+                    Mobile money number
                   </label>
                   <input
                     id="pay-phone"
@@ -249,6 +235,7 @@ export default function BuyCreditsModal({ onClose, onCredits, initialPackId, bal
                     placeholder="0712 345 678"
                     className="field mt-2 w-full text-base"
                   />
+                  <p className="mt-1.5 text-xs text-muted">M-Pesa, Airtel Money, Mixx by Yas or Halotel. We detect the network from the number.</p>
                 </div>
               </div>
 
