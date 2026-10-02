@@ -24,7 +24,7 @@ export default function PasswordField({ label, value, onChange, autoComplete, mi
           autoComplete={autoComplete}
           value={value}
           onChange={onChange}
-          className="field"
+          className="field-pill"
           style={{ paddingRight: "3rem" }}
         />
         <button
@@ -32,7 +32,7 @@ export default function PasswordField({ label, value, onChange, autoComplete, mi
           onClick={() => setShow((s) => !s)}
           aria-label={show ? "Hide password" : "Show password"}
           aria-pressed={show}
-          className="absolute inset-y-0 right-0 grid w-12 place-items-center rounded-r-[10px] text-muted hover:text-navy"
+          className="absolute inset-y-0 right-0 grid w-12 place-items-center rounded-r-full text-muted hover:text-navy"
         >
           {show ? (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

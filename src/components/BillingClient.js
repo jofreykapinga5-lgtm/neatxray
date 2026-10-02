@@ -20,88 +20,86 @@ const when = (iso) =>
 
 const networkName = (id) => NETWORKS.find((n) => n.id === id)?.label || id;
 
+// Flat page: headings, text and spacing only. No cards, no boxes, no divider lines.
 export default function BillingClient({ initialBalance, scanCost, email, purchases, ledger }) {
   const router = useRouter();
   const [balance, setBalance] = useState(initialBalance);
   const [buyOpen, setBuyOpen] = useState(false);
 
   return (
-    <div className="space-y-6">
-      <section className="card p-5 sm:p-6">
-        <p className="text-sm text-muted">{email}</p>
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="font-serif text-6xl leading-none text-navy">{balance}</p>
-            <p className="mt-2 text-sm text-muted">
-              {balance === 1 ? "credit" : "credits"} left &middot; {scanCost} {scanCost === 1 ? "credit" : "credits"} per scan
-            </p>
-          </div>
+    <div className="space-y-14">
+      <section>
+        <h2 className="font-serif text-3xl text-navy">Credits</h2>
+        <p className="mt-6 text-sm font-medium text-navy">Credit remaining</p>
+        <p className="mt-1 font-serif text-6xl leading-none text-navy sm:text-7xl">{balance}</p>
+        <p className="mt-3 text-sm text-muted">
+          {scanCost} {scanCost === 1 ? "credit" : "credits"} per scan &middot; {email}
+        </p>
+        {balance === 0 && <p className="mt-3 text-sm text-amber-800">You have no credits. Buy some to keep scanning.</p>}
+        <div className="mt-6 flex flex-wrap gap-3">
           <button type="button" className="btn-primary" onClick={() => setBuyOpen(true)}>
             Buy credits
           </button>
+          <a href="#history" className="inline-flex min-h-[44px] items-center rounded-full bg-line px-5 font-semibold text-navy hover:brightness-95">
+            View usage
+          </a>
         </div>
-        {balance === 0 && (
-          <p role="note" className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-            You have no credits. Buy a pack to keep scanning.
-          </p>
-        )}
       </section>
 
-      <section className="card p-5 sm:p-6">
+      <section>
         <h2 className="font-serif text-2xl text-navy">Pricing</h2>
-        <p className="mt-1 text-sm text-muted">Pay with mobile money. Credits never expire. A credit is used only when a report is produced.</p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]">
+        <p className="mt-2 text-sm text-muted">
+          {tsh(PRICE_PER_CREDIT)} per credit. Credits never expire, and one is used only when a report is produced.
+        </p>
+        <dl className="mt-5 space-y-3">
           {CREDIT_PACKS.map((p) => (
-            <div key={p.id} className="rounded-2xl border border-line p-4 text-center">
-              <p className="font-serif text-4xl text-navy">{p.credits}</p>
-              <p className="text-xs text-muted">credits</p>
-              <p className="mt-2 font-medium text-navy">{tsh(p.amount)}</p>
-              <p className="text-xs text-muted">{tsh(Math.round(p.amount / p.credits))} per scan</p>
+            <div key={p.id} className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 sm:max-w-md">
+              <dt className="text-navy">{p.credits} credits</dt>
+              <dd className="text-navy">{tsh(p.amount)}</dd>
             </div>
           ))}
-        </div>
-        <p className="mt-3 text-sm text-muted">
-          Need a different amount? Choose your own, from {MIN_CREDITS} to {MAX_CREDITS} credits, at {tsh(PRICE_PER_CREDIT)} per credit.
+        </dl>
+        <p className="mt-5 text-sm text-muted">
+          Or choose your own amount, from {MIN_CREDITS} to {MAX_CREDITS} credits. Pay with {NETWORKS.map((n) => n.label).join(", ")}.
         </p>
-        <p className="mt-2 text-xs text-muted">Accepted: {NETWORKS.map((n) => n.label).join(", ")}.</p>
       </section>
 
-      <section className="card p-5 sm:p-6">
+      <section>
         <h2 className="font-serif text-2xl text-navy">Payments</h2>
         {purchases.length === 0 ? (
           <p className="mt-2 text-sm text-muted">No payments yet.</p>
         ) : (
-          <ul className="mt-3 divide-y divide-line">
+          <ul className="mt-5 space-y-5">
             {purchases.map((p) => (
-              <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
+              <li key={p.id} className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 text-sm sm:max-w-xl">
                 <span>
-                  <span className="font-medium text-navy">{p.credits} credits</span>
+                  <span className="text-navy">{p.credits} credits</span>
                   <span className="text-muted">
                     {" "}
                     &middot; {tsh(p.amount)} &middot; {networkName(p.provider)}
                   </span>
                   <span className="block text-xs text-muted">{when(p.created_at)}</span>
                 </span>
-                <span className={`badge ${p.status === "completed" ? "badge-likely" : "badge-unlikely"}`}>{STATUS_LABEL[p.status] || p.status}</span>
+                <span className={p.status === "completed" ? "font-medium text-emerald-700" : "text-muted"}>{STATUS_LABEL[p.status] || p.status}</span>
               </li>
             ))}
           </ul>
         )}
       </section>
 
-      <section className="card p-5 sm:p-6">
-        <h2 className="font-serif text-2xl text-navy">Credit history</h2>
+      <section id="history" className="scroll-mt-6">
+        <h2 className="font-serif text-2xl text-navy">Usage</h2>
         {ledger.length === 0 ? (
           <p className="mt-2 text-sm text-muted">Nothing yet.</p>
         ) : (
-          <ul className="mt-3 divide-y divide-line">
+          <ul className="mt-5 space-y-5">
             {ledger.map((l) => (
-              <li key={l.id} className="flex items-center justify-between gap-2 py-3 text-sm">
+              <li key={l.id} className="flex items-baseline justify-between gap-6 text-sm sm:max-w-xl">
                 <span>
                   <span className="text-navy">{REASON_LABEL[l.reason] || l.reason}</span>
                   <span className="block text-xs text-muted">{when(l.created_at)}</span>
                 </span>
-                <span className={`font-medium ${l.delta > 0 ? "text-emerald-700" : "text-navy"}`}>
+                <span className={l.delta > 0 ? "font-medium text-emerald-700" : "text-navy"}>
                   {l.delta > 0 ? "+" : ""}
                   {l.delta}
                 </span>
@@ -115,7 +113,7 @@ export default function BillingClient({ initialBalance, scanCost, email, purchas
         <BuyCreditsModal
           onClose={() => {
             setBuyOpen(false);
-            router.refresh(); // reload the payment and history lists
+            router.refresh(); // reload the payment and usage lists
           }}
           onCredits={setBalance}
         />

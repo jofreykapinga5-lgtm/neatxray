@@ -46,6 +46,20 @@ body {
   background: #fff;
   color: var(--navy);
 }
+/* Rounded pill input used on the sign-in pages. */
+.field-pill {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9999px;
+  padding: 0.6rem 1.25rem;
+  background: #fff;
+  color: var(--navy);
+}
+.field-pill:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
 .field:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;

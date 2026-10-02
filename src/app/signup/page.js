@@ -88,7 +88,7 @@ export default function SignUpPage() {
         <form onSubmit={onSubmit} className="space-y-4">
           <label className="block text-sm">
             <span className="text-navy">Email</span>
-            <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="field mt-1" />
+            <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="field-pill mt-1" />
           </label>
           <PasswordField
             label="Password"

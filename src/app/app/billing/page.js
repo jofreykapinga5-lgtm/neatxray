@@ -35,17 +35,17 @@ export default async function BillingPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-5 sm:px-6">
+      <header className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-5 sm:px-6">
         <h1>
           <Link href="/app" aria-label="neatx-ray home">
             <Logo size={34} />
           </Link>
         </h1>
-        <Link href="/app" className="btn-ghost">
+        <Link href="/app" className="inline-flex min-h-[44px] items-center text-sm font-medium text-navy underline underline-offset-4">
           Back to scans
         </Link>
       </header>
-      <main className="mx-auto max-w-4xl px-4 pb-16 sm:px-6">
+      <main className="mx-auto max-w-3xl px-4 pb-20 pt-6 sm:px-6">
         <BillingClient initialBalance={balance} scanCost={SCAN_COST} email={user.email} purchases={purchases} ledger={ledger} />
       </main>
     </div>
