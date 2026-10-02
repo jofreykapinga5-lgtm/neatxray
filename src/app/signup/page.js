@@ -47,7 +47,7 @@ export default function SignUpPage() {
     return (
       <AuthShell
         title="Check your email"
-        subtitle={`We sent a confirmation link to ${email}. Open it to finish creating your account.`}
+        subtitle={`We sent a confirmation link to ${email}. Open it to finish creating your account and get your 5 free scans.`}
         footer={
           <>
             Already confirmed?{" "}
@@ -65,7 +65,7 @@ export default function SignUpPage() {
   return (
     <AuthShell
       title="Create your account"
-      subtitle="Start reading films with AI decision support."
+      subtitle="Your first 5 scans are free."
       footer={
         <>
           Already have an account?{" "}
