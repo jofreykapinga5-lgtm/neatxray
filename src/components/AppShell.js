@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -10,6 +10,40 @@ const Icon = ({ children }) => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     {children}
   </svg>
+);
+
+// Whether the desktop sidebar is collapsed. Remembered in the browser; falls back to memory if storage is blocked.
+const SIDEBAR_KEY = "neatx-sidebar";
+const listeners = new Set();
+let memoryCollapsed = false;
+function subscribeSidebar(callback) {
+  listeners.add(callback);
+  window.addEventListener("storage", callback);
+  return () => {
+    listeners.delete(callback);
+    window.removeEventListener("storage", callback);
+  };
+}
+function readCollapsed() {
+  try {
+    const saved = localStorage.getItem(SIDEBAR_KEY);
+    if (saved) return saved === "collapsed";
+  } catch {}
+  return memoryCollapsed;
+}
+function writeCollapsed(value) {
+  memoryCollapsed = value;
+  try {
+    localStorage.setItem(SIDEBAR_KEY, value ? "collapsed" : "open");
+  } catch {}
+  listeners.forEach((l) => l());
+}
+
+const PanelIcon = () => (
+  <Icon>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M9 4v16" />
+  </Icon>
 );
 
 const NAV = [
@@ -35,13 +69,24 @@ const NAV = [
   },
 ];
 
-function SidebarContent({ email, credits, pathname, onNavigate, onSignOut }) {
+function SidebarContent({ email, credits, pathname, onNavigate, onSignOut, onCollapse }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="px-5 py-5">
+      <div className="flex items-center justify-between gap-2 px-5 py-5">
         <Link href="/app" aria-label="neatx-ray home" onClick={onNavigate} className="inline-flex min-h-[44px] items-center">
           <Logo size={32} />
         </Link>
+        {onCollapse && (
+          <button
+            type="button"
+            onClick={onCollapse}
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+            className="grid h-9 w-9 place-items-center rounded-lg text-muted transition-colors hover:bg-white/70 hover:text-navy"
+          >
+            <PanelIcon />
+          </button>
+        )}
       </div>
 
       <nav aria-label="Main" className="flex-1 space-y-1 px-3">
@@ -97,6 +142,7 @@ export default function AppShell({ email, credits = null, children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const collapsed = useSyncExternalStore(subscribeSidebar, readCollapsed, () => false);
 
   useEffect(() => {
     if (!open) return;
@@ -114,11 +160,27 @@ export default function AppShell({ email, credits = null, children }) {
   const content = { email, credits, pathname, onNavigate: () => setOpen(false), onSignOut: signOut };
 
   return (
-    <div className="min-h-screen lg:pl-60">
+    <div className={`min-h-screen transition-[padding] duration-200 ${collapsed ? "lg:pl-0 lg:pt-12" : "lg:pl-60"}`}>
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-line bg-white/50 lg:block">
-        <SidebarContent {...content} />
+      <aside
+        inert={collapsed}
+        className={`fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-line bg-white/50 transition-transform duration-200 lg:block ${collapsed ? "-translate-x-full" : ""}`}
+      >
+        <SidebarContent {...content} onCollapse={() => writeCollapsed(true)} />
       </aside>
+
+      {/* Reopen button while the sidebar is collapsed */}
+      {collapsed && (
+        <button
+          type="button"
+          onClick={() => writeCollapsed(false)}
+          aria-label="Open sidebar"
+          title="Open sidebar"
+          className="fixed left-4 top-3 z-30 hidden h-9 w-9 place-items-center rounded-lg bg-white/80 text-muted shadow-[0_1px_2px_rgba(31,53,86,0.1)] transition-colors hover:text-navy lg:grid"
+        >
+          <PanelIcon />
+        </button>
+      )}
 
       {/* Phone top bar */}
       <div className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-bg/95 px-4 py-2 backdrop-blur lg:hidden">
