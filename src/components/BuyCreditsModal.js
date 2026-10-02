@@ -8,11 +8,12 @@ const POLL_MS = 3000;
 const GIVE_UP_MS = 4 * 60 * 1000; // the provider expires an unapproved payment after a few hours; we stop waiting sooner
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export default function BuyCreditsModal({ onClose, onCredits }) {
+export default function BuyCreditsModal({ onClose, onCredits, initialPackId }) {
   const dialogRef = useRef(null);
   const stoppedRef = useRef(false);
+  const customRef = useRef(null);
   const [phase, setPhase] = useState("form"); // form | waiting | done | failed
-  const [packId, setPackId] = useState(CREDIT_PACKS[0].id);
+  const [packId, setPackId] = useState(initialPackId || CREDIT_PACKS[0].id);
   const [custom, setCustom] = useState("");
   const [provider, setProvider] = useState(NETWORKS[0].id);
   const [phone, setPhone] = useState("");
@@ -24,6 +25,13 @@ export default function BuyCreditsModal({ onClose, onCredits }) {
   useDialogFocus(dialogRef, () => {
     if (phase !== "waiting") onClose();
   });
+
+  // When opened from the "Custom" card, put the cursor in the amount box once the window has settled.
+  useEffect(() => {
+    if (initialPackId !== CUSTOM_PACK_ID) return;
+    const t = setTimeout(() => customRef.current?.focus(), 350);
+    return () => clearTimeout(t);
+  }, [initialPackId]);
 
   useEffect(() => {
     stoppedRef.current = false;
@@ -150,6 +158,7 @@ export default function BuyCreditsModal({ onClose, onCredits }) {
                         }}
                         placeholder={`${MIN_CREDITS}–${MAX_CREDITS}`}
                         aria-label="Number of credits"
+                        ref={customRef}
                         className="w-28 rounded-xl border border-line bg-bg px-3 py-2 text-base outline-none focus:border-accent"
                       />
                       <span className="text-sm text-muted">credits</span>

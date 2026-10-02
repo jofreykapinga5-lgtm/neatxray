@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import BuyCreditsModal from "./BuyCreditsModal";
-import { CREDIT_PACKS, MAX_CREDITS, MIN_CREDITS, NETWORKS, PRICE_PER_CREDIT, tsh } from "@/lib/credit-packs";
+import { CREDIT_PACKS, CUSTOM_PACK_ID, MAX_CREDITS, MIN_CREDITS, NETWORKS, PRICE_PER_CREDIT, tsh } from "@/lib/credit-packs";
 
 const STATUS_LABEL = {
   pending: "Waiting for approval",
@@ -25,6 +25,12 @@ export default function BillingClient({ initialBalance, scanCost, email, purchas
   const router = useRouter();
   const [balance, setBalance] = useState(initialBalance);
   const [buyOpen, setBuyOpen] = useState(false);
+  const [startPack, setStartPack] = useState(undefined);
+
+  function openBuy(packId) {
+    setStartPack(packId);
+    setBuyOpen(true);
+  }
 
   return (
     <div className="space-y-14">
@@ -37,7 +43,7 @@ export default function BillingClient({ initialBalance, scanCost, email, purchas
         </p>
         {balance === 0 && <p className="mt-3 text-sm text-amber-800">You have no credits. Buy some to keep scanning.</p>}
         <div className="mt-6 flex flex-wrap gap-3">
-          <button type="button" className="btn-primary" onClick={() => setBuyOpen(true)}>
+          <button type="button" className="btn-primary" onClick={() => openBuy(undefined)}>
             Buy credits
           </button>
           <a href="#history" className="inline-flex min-h-[44px] items-center rounded-full bg-line px-5 font-semibold text-navy hover:brightness-95">
@@ -51,17 +57,35 @@ export default function BillingClient({ initialBalance, scanCost, email, purchas
         <p className="mt-2 text-sm text-muted">
           {tsh(PRICE_PER_CREDIT)} per credit. Credits never expire, and one is used only when a report is produced.
         </p>
-        <dl className="mt-5 space-y-3">
+        <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           {CREDIT_PACKS.map((p) => (
-            <div key={p.id} className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 sm:max-w-md">
-              <dt className="text-navy">{p.credits} credits</dt>
-              <dd className="text-navy">{tsh(p.amount)}</dd>
-            </div>
+            <li key={p.id} className="flex flex-col rounded-3xl bg-white p-5 shadow-[0_1px_2px_rgba(31,53,86,0.05),0_12px_30px_rgba(31,53,86,0.08)]">
+              <p className="font-serif text-5xl leading-none text-navy">{p.credits}</p>
+              <p className="mt-1 text-sm text-muted">credits</p>
+              <p className="mt-5 text-lg font-semibold text-navy">{tsh(p.amount)}</p>
+              <p className="text-xs text-muted">{tsh(PRICE_PER_CREDIT)} per scan</p>
+              <div className="mt-auto pt-5">
+                <button type="button" onClick={() => openBuy(p.id)} className="btn-primary w-full justify-center">
+                  Buy {p.credits}
+                </button>
+              </div>
+            </li>
           ))}
-        </dl>
-        <p className="mt-5 text-sm text-muted">
-          Or choose your own amount, from {MIN_CREDITS} to {MAX_CREDITS} credits. Pay with {NETWORKS.map((n) => n.label).join(", ")}.
-        </p>
+          <li className="flex flex-col rounded-3xl bg-white p-5 shadow-[0_1px_2px_rgba(31,53,86,0.05),0_12px_30px_rgba(31,53,86,0.08)]">
+            <p className="font-serif text-5xl leading-none text-navy">Any</p>
+            <p className="mt-1 text-sm text-muted">
+              {MIN_CREDITS} to {MAX_CREDITS} credits
+            </p>
+            <p className="mt-5 text-lg font-semibold text-navy">You choose</p>
+            <p className="text-xs text-muted">{tsh(PRICE_PER_CREDIT)} per scan</p>
+            <div className="mt-auto pt-5">
+              <button type="button" onClick={() => openBuy(CUSTOM_PACK_ID)} className="btn-ghost w-full justify-center whitespace-nowrap">
+                Custom
+              </button>
+            </div>
+          </li>
+        </ul>
+        <p className="mt-5 text-sm text-muted">Pay with {NETWORKS.map((n) => n.label).join(", ")}.</p>
       </section>
 
       <section>
@@ -111,6 +135,7 @@ export default function BillingClient({ initialBalance, scanCost, email, purchas
 
       {buyOpen && (
         <BuyCreditsModal
+          initialPackId={startPack}
           onClose={() => {
             setBuyOpen(false);
             router.refresh(); // reload the payment and usage lists
