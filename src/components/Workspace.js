@@ -441,7 +441,7 @@ export default function Workspace({ email, initialCredits = null }) {
               <ul className="flex flex-wrap gap-2 text-xs">
                 {images.map((img, i) =>
                   img.blob ? (
-                    <li key={img.url} className="motion-rise rounded-full border border-line pl-3 pr-1 flex items-center gap-1">
+                    <li key={img.url} className="motion-rise rounded-full bg-bg pl-3 pr-1 flex items-center gap-1">
                       {img.name}
                       <button type="button" aria-label={`Remove ${img.name}`} onClick={() => removeImage(i)} className="grid h-11 w-11 place-items-center rounded-full text-base text-muted hover:text-navy">
                         ×
@@ -456,7 +456,7 @@ export default function Workspace({ email, initialCredits = null }) {
               <button
                 type="button"
                 onClick={goToDetails}
-                className="motion-rise flex w-full items-center justify-between gap-3 rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3 text-left text-navy"
+                className="motion-rise flex w-full items-center justify-between gap-3 rounded-2xl bg-accent/10 px-4 py-3 text-left text-navy"
               >
                 <span className="text-sm">
                   <strong>Image added.</strong> Next, add a few patient details.
@@ -472,7 +472,7 @@ export default function Workspace({ email, initialCredits = null }) {
               ref={detailsRef}
               open={detailsOpen}
               onToggle={(e) => setDetailsOpen(e.currentTarget.open)}
-              className="group scroll-mt-4 rounded-xl border border-line px-3"
+              className="group scroll-mt-4 rounded-xl bg-bg px-3"
             >
               <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-navy">
                 <span>
@@ -530,7 +530,7 @@ export default function Workspace({ email, initialCredits = null }) {
               </div>
             </details>
 
-            <details className="group rounded-xl border border-line px-3">
+            <details className="group rounded-xl bg-bg px-3">
               <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-navy">
                 <span>More options <span className="font-normal text-muted">(case label, notes)</span></span>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-muted transition-transform duration-200 group-open:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
