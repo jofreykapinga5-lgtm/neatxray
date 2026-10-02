@@ -24,6 +24,7 @@ export default function AnalysisModal({
   onRetry,
   onStopWaiting,
   onDownload,
+  onBuy,
 }) {
   const dialogRef = useRef(null);
   const [copied, setCopied] = useState(false);
@@ -152,9 +153,15 @@ export default function AnalysisModal({
               <button type="button" className="btn-ghost" onClick={onClose}>
                 Close
               </button>
-              <button type="button" className="btn-primary" onClick={onRetry}>
-                Try again
-              </button>
+              {onBuy && /out of credits/i.test(error || "") ? (
+                <button type="button" className="btn-primary" onClick={onBuy}>
+                  Buy credits
+                </button>
+              ) : (
+                <button type="button" className="btn-primary" onClick={onRetry}>
+                  Try again
+                </button>
+              )}
             </div>
           </div>
         )}

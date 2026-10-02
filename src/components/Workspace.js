@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { prepareFiles } from "@/lib/prepare-files";
 import Logo from "./Logo";
+import BuyCreditsModal from "./BuyCreditsModal";
 import Viewer from "./Viewer";
 import ReportView from "./ReportView";
 import CameraCapture from "./CameraCapture";
@@ -49,6 +50,7 @@ export default function Workspace({ email, initialCredits = null }) {
   const [status, setStatus] = useState("idle"); // idle | preparing | uploading | analyzing
   const [error, setError] = useState("");
   const [credits, setCredits] = useState(initialCredits);
+  const [buyOpen, setBuyOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [result, setResult] = useState(null);
   const [showCamera, setShowCamera] = useState(false);
@@ -386,12 +388,14 @@ export default function Workspace({ email, initialCredits = null }) {
         <h1><Logo size={34} /></h1>
         <div className="flex items-center gap-3 text-sm">
           {credits !== null && (
-            <span
+            <button
+              type="button"
+              onClick={() => setBuyOpen(true)}
               className={`rounded-full border px-3 py-1.5 font-medium ${credits > 0 ? "border-line bg-surface text-navy" : "border-red-300 bg-red-50 text-red-900"}`}
-              title="1 credit = 1 scan"
+              title="1 credit = 1 scan. Tap to buy more."
             >
-              {credits} {credits === 1 ? "credit" : "credits"}
-            </span>
+              {credits} {credits === 1 ? "credit" : "credits"} · Buy
+            </button>
           )}
           <span className="hidden sm:inline text-muted">{email}</span>
           <button type="button" onClick={signOut} className="btn-ghost">Sign out</button>
@@ -615,6 +619,7 @@ export default function Workspace({ email, initialCredits = null }) {
           stage={stage}
           progress={progress}
           error={error}
+          onBuy={credits !== null ? () => { closeModal(); setBuyOpen(true); } : undefined}
           result={result}
           rejection={rejection}
           thumb={images[0]?.url}
@@ -636,6 +641,7 @@ export default function Workspace({ email, initialCredits = null }) {
           }}
         />
       )}
+      {buyOpen && <BuyCreditsModal onClose={() => setBuyOpen(false)} onCredits={setCredits} />}
     </div>
   );
 }
