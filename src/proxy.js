@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
 // The payment webhook is called by the payment provider (no login); it verifies its own signature.
-const PUBLIC_PATHS = ["/login", "/auth", "/api/payments/webhook"];
+const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/auth", "/api/payments/webhook"];
 
 export async function proxy(request) {
   let response = NextResponse.next({ request });
@@ -43,7 +43,7 @@ export async function proxy(request) {
     return NextResponse.redirect(url);
   }
 
-  if (user && pathname === "/login") {
+  if (user && (pathname === "/login" || pathname === "/signup")) {
     const url = request.nextUrl.clone();
     url.pathname = "/app";
     return NextResponse.redirect(url);

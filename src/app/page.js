@@ -223,7 +223,7 @@ export default function Landing() {
       <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-20">
         <div className="rounded-3xl bg-navy text-white px-6 py-14 sm:px-14 text-center">
           <h2 className="font-serif text-3xl sm:text-4xl">Bring a calmer workflow to your reading room</h2>
-          <p className="mt-3 text-white/70">Access is by invitation. You will be asked to sign in first.</p>
+          <p className="mt-3 text-white/70">Create an account or sign in to start reading films with AI decision support.</p>
           <Link href={cta.href} className="mt-8 inline-flex items-center rounded-full bg-white px-6 min-h-[44px] font-semibold text-navy hover:bg-bg">
             {cta.label}
           </Link>
