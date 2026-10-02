@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CREDITS_ENABLED, SCAN_COST, getBalance } from "@/lib/credits";
-import Logo from "@/components/Logo";
+import AppShell from "@/components/AppShell";
 import BillingClient from "@/components/BillingClient";
 
 export const metadata = { title: "Billing" };
@@ -52,21 +51,11 @@ export default async function BillingPage() {
   };
 
   return (
-    <div className="min-h-screen">
-      <header className="flex w-full items-center justify-between gap-3 px-4 py-5 sm:px-8">
-        <h1>
-          <Link href="/app" aria-label="neatx-ray home">
-            <Logo size={34} />
-          </Link>
-        </h1>
-        <Link href="/app" className="inline-flex min-h-[44px] items-center text-sm font-medium text-navy underline underline-offset-4">
-          Back to scans
-        </Link>
-      </header>
-      <main className="mx-auto max-w-3xl px-4 pb-20 pt-4 sm:px-6">
-        <h2 className="mb-6 text-3xl font-bold tracking-tight text-navy">Billing</h2>
+    <AppShell email={user.email} credits={balance}>
+      <main className="mx-auto max-w-3xl px-4 pb-20 pt-8 sm:px-8">
+        <h1 className="mb-6 text-3xl font-bold tracking-tight text-navy">Billing</h1>
         <BillingClient initialBalance={balance} scanCost={SCAN_COST} stats={stats} purchases={purchases} ledger={ledger.slice(0, 30)} />
       </main>
-    </div>
+    </AppShell>
   );
 }

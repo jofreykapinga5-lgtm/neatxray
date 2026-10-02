@@ -4,8 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { prepareFiles } from "@/lib/prepare-files";
-import Link from "next/link";
-import Logo from "./Logo";
+import AppShell from "./AppShell";
 import BuyCreditsModal from "./BuyCreditsModal";
 import Viewer from "./Viewer";
 import ReportView from "./ReportView";
@@ -351,12 +350,6 @@ export default function Workspace({ email, initialCredits = null }) {
     loadHistory();
   }
 
-  async function signOut() {
-    await supabase.auth.signOut();
-    router.replace("/login");
-    router.refresh();
-  }
-
   const statusText = { preparing: "Preparing files…", uploading: "Uploading securely…", analyzing: "Analyzing… this usually takes about a minute." }[status];
   const resumable = Boolean(resumeCaseId) && !result;
   const canAnalyze = (images.length > 0 && images.every((i) => i.blob) && !busy) || (resumable && !busy);
@@ -383,26 +376,10 @@ export default function Workspace({ email, initialCredits = null }) {
   }
 
   return (
-    <div className="min-h-screen">
+    <AppShell email={email} credits={credits}>
 
-      <header className="mx-auto max-w-7xl px-4 sm:px-6 py-5 flex items-center justify-between gap-3">
-        <h1><Logo size={34} /></h1>
-        <div className="flex items-center gap-3 text-sm">
-          {credits !== null && (
-            <Link
-              href="/app/billing"
-              className={`rounded-full border px-3 py-1.5 font-medium ${credits > 0 ? "border-line bg-surface text-navy" : "border-red-300 bg-red-50 text-red-900"}`}
-              title="1 credit = 1 scan. Open billing."
-            >
-              {credits} {credits === 1 ? "credit" : "credits"} · Billing
-            </Link>
-          )}
-          <span className="hidden sm:inline text-muted">{email}</span>
-          <button type="button" onClick={signOut} className="btn-ghost">Sign out</button>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 pb-16 grid gap-6 lg:grid-cols-2">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 pb-16 pt-6 grid gap-6 lg:grid-cols-2">
+        <h1 className="sr-only">Scan an X-ray</h1>
         <div className="min-w-0 space-y-4">
           <Viewer
             images={images}
@@ -642,6 +619,6 @@ export default function Workspace({ email, initialCredits = null }) {
         />
       )}
       {buyOpen && <BuyCreditsModal balance={credits} onClose={() => setBuyOpen(false)} onCredits={setCredits} />}
-    </div>
+    </AppShell>
   );
 }
