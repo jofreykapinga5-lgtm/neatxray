@@ -63,9 +63,23 @@ body {
   background: #fff;
   color: var(--navy);
 }
-.field-pill:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+/* One tight ring, no gap: the border turns accent and a soft halo sits right against it. */
+.field-pill:focus,
+.field-pill:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+/* Keep the box white when the browser autofills a saved email or password. */
+.field-pill:-webkit-autofill,
+.field-pill:-webkit-autofill:hover {
+  -webkit-text-fill-color: var(--navy);
+  box-shadow: 0 0 0 1000px #fff inset;
+  caret-color: var(--navy);
+}
+.field-pill:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--navy);
+  box-shadow: 0 0 0 1000px #fff inset, 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 .field:focus {
   outline: 2px solid var(--accent);
