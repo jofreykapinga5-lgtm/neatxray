@@ -211,7 +211,7 @@ export default function Landing() {
             <details key={f.q} className="group">
               <summary className="cursor-pointer list-none flex min-h-[44px] items-center justify-between gap-4 py-4 font-medium text-navy">
                 {f.q}
-                <span className="text-accent-strong transition-transform group-open:rotate-45 text-xl leading-none" aria-hidden="true">+</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-accent-strong transition-transform duration-200 group-open:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
               </summary>
               <p className="-mt-1 pb-4 text-sm text-muted">{f.a}</p>
             </details>
