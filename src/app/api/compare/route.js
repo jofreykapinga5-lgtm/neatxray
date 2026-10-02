@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { compareModels } from "@/lib/ai/compare";
+import { chestScores, compareModels } from "@/lib/ai/compare";
 import { splitNotes } from "@/lib/case-notes";
 
 export const maxDuration = 300;
@@ -70,5 +70,6 @@ export async function POST(request) {
       question: caseRow.clinical_question,
     },
   });
-  return NextResponse.json({ models });
+  const xrv = await chestScores(images, models);
+  return NextResponse.json({ models, xrv });
 }

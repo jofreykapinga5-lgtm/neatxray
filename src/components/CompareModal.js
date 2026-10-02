@@ -19,6 +19,29 @@ function Bullets({ items }) {
   );
 }
 
+function ChestScores({ xrv }) {
+  return (
+    <section className="mb-4 rounded-2xl border border-line bg-surface p-4">
+      <h3 className="font-semibold text-navy">Chest finding scores (TorchXRayVision)</h3>
+      <ul className="mt-3 space-y-2">
+        {xrv.findings.map((f) => (
+          <li key={f.finding} className="grid grid-cols-[9rem_1fr_3rem] items-center gap-3 text-sm">
+            <span className="text-navy">{f.finding.replace(/_/g, " ")}</span>
+            <span className="h-2 rounded-full bg-line" aria-hidden="true">
+              <span className="block h-2 rounded-full bg-accent" style={{ width: `${Math.round(f.score * 100)}%` }} />
+            </span>
+            <span className="text-right text-muted">{f.score.toFixed(2)}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-xs text-muted">
+        A score near 0.5 means no clear signal, not a finding. These scores work best on clean digital films and are weak
+        on photos of a screen. Chest films only. Price: our own GPU server, about $0.49 per hour.
+      </p>
+    </section>
+  );
+}
+
 function ModelCard({ m, cheapest }) {
   const r = m.report;
   return (
@@ -88,6 +111,7 @@ export default function CompareModal({ caseId, onClose }) {
   const dialogRef = useRef(null);
   const [phase, setPhase] = useState("loading"); // loading | done | error
   const [models, setModels] = useState([]);
+  const [xrv, setXrv] = useState(null);
   const [error, setError] = useState("");
 
   useDialogFocus(dialogRef, () => {
@@ -115,6 +139,7 @@ export default function CompareModal({ caseId, onClose }) {
         const body = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(body.error || "The comparison failed.");
         setModels(body.models);
+        setXrv(body.xrv || null);
         setPhase("done");
       } catch (err) {
         if (controller.signal.aborted) return;
@@ -192,6 +217,7 @@ export default function CompareModal({ caseId, onClose }) {
               <p className="mb-4 text-sm text-muted">
                 All {ok.length} answers together cost <strong className="text-navy">{money(total)}</strong> to produce.
               </p>
+              {xrv && <ChestScores xrv={xrv} />}
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {models.map((m) => (
                   <ModelCard key={m.id} m={m} cheapest={m.id === cheapestId} />

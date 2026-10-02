@@ -77,3 +77,26 @@ export async function compareModels(input) {
     return { ...base, ok: false, error: s.reason?.message || "This model failed." };
   });
 }
+
+// Chest finding scores from TorchXRayVision on our GPU pod. Only meaningful for chest films,
+// so it runs only when most of the models that answered describe the film as a chest image.
+export async function chestScores(images, models) {
+  if (!process.env.GPU_URL || !process.env.GPU_API_TOKEN) return null;
+  const answered = models.filter((m) => m.ok);
+  const chest = answered.filter((m) => /chest|lung|thora|cxr/i.test(m.report.region_and_view || ""));
+  if (answered.length === 0 || chest.length * 2 < answered.length) return null;
+  try {
+    const res = await fetch(`${process.env.GPU_URL}/xrv`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GPU_API_TOKEN}` },
+      body: JSON.stringify({ image: images[0].base64 }),
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!res.ok) return null;
+    const body = await res.json();
+    return { findings: body.findings.slice(0, 6), seconds: body.seconds };
+  } catch (err) {
+    console.error("compare: xrv failed:", err?.message || err);
+    return null;
+  }
+}
