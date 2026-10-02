@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
 // The payment webhook is called by the payment provider (no login); it verifies its own signature.
-const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/auth", "/api/payments/webhook"];
+const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password", "/auth", "/api/auth", "/api/payments/webhook"];
 
 export async function proxy(request) {
   let response = NextResponse.next({ request });

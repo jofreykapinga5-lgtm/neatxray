@@ -3,10 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { analyze } from "@/lib/ai";
 import { splitNotes } from "@/lib/case-notes";
 import { CREDITS_ENABLED, OUT_OF_CREDITS, SCAN_COST, charge, getBalance } from "@/lib/credits";
+import { clientIp, limitKey, limitUser, tooMany } from "@/lib/rate-limit";
 
 export const maxDuration = 300;
 
 const DAILY_LIMIT = Number(process.env.DAILY_SCAN_LIMIT || 50);
+// Emergency brake on the whole site, so a flood of new accounts cannot run up the AI bill in a day.
+const GLOBAL_DAILY_LIMIT = Number(process.env.GLOBAL_DAILY_SCAN_LIMIT || 1000);
 
 export async function POST(request) {
   const supabase = await createClient();
@@ -15,7 +18,15 @@ export async function POST(request) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
-  const { caseId, provider } = await request.json().catch(() => ({}));
+  // Limits come before any file download or AI call, which is where the cost is.
+  const perUser = await limitUser(supabase, "analyze");
+  if (!perUser.allowed) return tooMany(perUser.retryAfter, "You are scanning too fast.");
+  const perIp = await limitKey(`analyze:ip:${clientIp(request)}`, 30, 3600);
+  if (!perIp.allowed) return tooMany(perIp.retryAfter, "Too many scans from this network.");
+  const sitewide = await limitKey("analyze:global", GLOBAL_DAILY_LIMIT, 86400);
+  if (!sitewide.allowed) return tooMany(sitewide.retryAfter, "The service is very busy today.");
+
+  const { caseId } = await request.json().catch(() => ({}));
   if (!caseId) return NextResponse.json({ error: "caseId is required" }, { status: 400 });
 
   // RLS guarantees these only return the signed-in doctor's own rows.
@@ -79,7 +90,7 @@ export async function POST(request) {
           question: caseRow.clinical_question,
         },
       },
-      provider || undefined
+      undefined // the server alone chooses the AI provider
     );
     // Not a medical image: remove the case and its files so nothing is kept or counted.
     if (result.report.image_type === "not_medical") {

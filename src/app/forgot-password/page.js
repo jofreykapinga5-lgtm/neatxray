@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import AuthShell from "@/components/AuthShell";
 
 export default function ForgotPasswordPage() {
@@ -15,12 +14,19 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setBusy(true);
     setError("");
-    const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
-    });
-    setBusy(false);
-    if (error) return setError("We could not send the email. Please try again in a moment.");
+    try {
+      const res = await fetch("/api/auth/forgot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const body = await res.json().catch(() => ({}));
+      setBusy(false);
+      if (!res.ok) return setError(body.error || "We could not send the email. Please try again in a moment.");
+    } catch {
+      setBusy(false);
+      return setError("We could not reach the server. Check your connection and try again.");
+    }
     setSent(true); // same message whether or not the address has an account, so nobody can probe for accounts
   }
 

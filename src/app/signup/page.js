@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import AuthShell from "@/components/AuthShell";
 import GoogleButton from "@/components/GoogleButton";
 import PasswordField from "@/components/PasswordField";
@@ -23,18 +22,25 @@ export default function SignUpPage() {
     if (password.length < 8) return setError("Use a password with at least 8 characters.");
     if (password !== confirm) return setError("The two passwords do not match.");
     setBusy(true);
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (error) {
-      setError(/registered|already/i.test(error.message) ? "An account with this email already exists. Try signing in." : error.message);
+    let body;
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(body.error || "We could not create the account. Please try again.");
+        setBusy(false);
+        return;
+      }
+    } catch {
+      setError("We could not reach the server. Check your connection and try again.");
       setBusy(false);
       return;
     }
-    if (data.session) {
+    if (body.signedIn) {
       // Email confirmation is switched off in Supabase: the account is ready straight away.
       router.replace("/app");
       router.refresh();

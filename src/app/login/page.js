@@ -3,7 +3,6 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import AuthShell from "@/components/AuthShell";
 import GoogleButton from "@/components/GoogleButton";
 import PasswordField from "@/components/PasswordField";
@@ -20,14 +19,20 @@ function SignInForm() {
     e.preventDefault();
     setBusy(true);
     setError("");
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setError(
-        /confirm/i.test(error.message)
-          ? "Please confirm your email first. We sent you a link when you created your account."
-          : "Sign-in failed. Check your email and password."
-      );
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(body.error || "Sign-in failed. Check your email and password.");
+        setBusy(false);
+        return;
+      }
+    } catch {
+      setError("We could not reach the server. Check your connection and try again.");
       setBusy(false);
       return;
     }

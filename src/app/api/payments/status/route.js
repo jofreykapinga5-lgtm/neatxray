@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getBalance } from "@/lib/credits";
 import { closePurchase, fulfilPurchase } from "@/lib/purchases";
 import { getPayment } from "@/lib/snippe";
+import { limitUser, tooMany } from "@/lib/rate-limit";
 
 // The app polls this while the buyer approves the payment on their phone. If the webhook is late,
 // this asks the provider directly, so credits still arrive.
@@ -13,6 +14,9 @@ export async function GET(request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+
+  const limit = await limitUser(supabase, "status");
+  if (!limit.allowed) return tooMany(limit.retryAfter);
 
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });

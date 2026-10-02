@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { CREDITS_ENABLED, SCAN_COST, getBalance } from "@/lib/credits";
+import { limitUser, tooMany } from "@/lib/rate-limit";
 
 export async function GET() {
   const supabase = await createClient();
@@ -9,6 +10,8 @@ export async function GET() {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   if (!CREDITS_ENABLED) return NextResponse.json({ enabled: false });
+  const limit = await limitUser(supabase, "credits");
+  if (!limit.allowed) return tooMany(limit.retryAfter);
   try {
     return NextResponse.json({ enabled: true, balance: await getBalance(supabase), scanCost: SCAN_COST });
   } catch (err) {
