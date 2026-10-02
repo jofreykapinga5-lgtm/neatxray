@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useDialogFocus } from "@/lib/use-dialog-focus";
-import { CREDIT_PACKS, NETWORKS, tsh } from "@/lib/credit-packs";
+import { CREDIT_PACKS, CUSTOM_PACK_ID, MAX_CREDITS, MIN_CREDITS, NETWORKS, resolvePurchase, tsh } from "@/lib/credit-packs";
 
 const POLL_MS = 3000;
 const GIVE_UP_MS = 4 * 60 * 1000; // the provider expires an unapproved payment after a few hours; we stop waiting sooner
@@ -13,12 +13,13 @@ export default function BuyCreditsModal({ onClose, onCredits }) {
   const stoppedRef = useRef(false);
   const [phase, setPhase] = useState("form"); // form | waiting | done | failed
   const [packId, setPackId] = useState(CREDIT_PACKS[0].id);
+  const [custom, setCustom] = useState("");
   const [provider, setProvider] = useState(NETWORKS[0].id);
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [bought, setBought] = useState(null);
 
-  const pack = CREDIT_PACKS.find((p) => p.id === packId);
+  const pack = resolvePurchase(packId, custom); // null while a custom number is missing or out of range
 
   useDialogFocus(dialogRef, () => {
     if (phase !== "waiting") onClose();
@@ -34,12 +35,17 @@ export default function BuyCreditsModal({ onClose, onCredits }) {
   async function pay(e) {
     e.preventDefault();
     setError("");
+    if (!pack) {
+      setPhase("failed");
+      setError(`Enter between ${MIN_CREDITS} and ${MAX_CREDITS} credits.`);
+      return;
+    }
     setPhase("waiting");
     try {
       const res = await fetch("/api/payments/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packId, provider, phone }),
+        body: JSON.stringify({ packId, credits: custom, provider, phone }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || "The payment could not be started.");
@@ -51,7 +57,7 @@ export default function BuyCreditsModal({ onClose, onCredits }) {
         const s = await r.json().catch(() => ({}));
         if (s.status === "completed") {
           if (typeof s.balance === "number") onCredits?.(s.balance);
-          setBought(pack.credits);
+          setBought(pack?.credits);
           setPhase("done");
           return;
         }
@@ -123,6 +129,38 @@ export default function BuyCreditsModal({ onClose, onCredits }) {
                     </label>
                   ))}
                 </div>
+                <label
+                  className={`block cursor-pointer rounded-2xl border p-3 transition-colors ${packId === CUSTOM_PACK_ID ? "border-accent bg-accent/10" : "border-line hover:border-accent/50"}`}
+                >
+                  <input type="radio" name="pack" value={CUSTOM_PACK_ID} checked={packId === CUSTOM_PACK_ID} onChange={() => setPackId(CUSTOM_PACK_ID)} className="sr-only" />
+                  <span className="flex flex-wrap items-center justify-between gap-3">
+                    <span className="text-sm font-medium text-navy">Choose your own amount</span>
+                    <span className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min={MIN_CREDITS}
+                        max={MAX_CREDITS}
+                        step="1"
+                        value={custom}
+                        onFocus={() => setPackId(CUSTOM_PACK_ID)}
+                        onChange={(e) => {
+                          setPackId(CUSTOM_PACK_ID);
+                          setCustom(e.target.value);
+                        }}
+                        placeholder={`${MIN_CREDITS}–${MAX_CREDITS}`}
+                        aria-label="Number of credits"
+                        className="w-28 rounded-xl border border-line bg-bg px-3 py-2 text-base outline-none focus:border-accent"
+                      />
+                      <span className="text-sm text-muted">credits</span>
+                    </span>
+                  </span>
+                  {packId === CUSTOM_PACK_ID && (
+                    <span className="mt-2 block text-xs text-muted">
+                      {pack ? `${tsh(pack.amount)} for ${pack.credits} credits` : `Enter a whole number from ${MIN_CREDITS} to ${MAX_CREDITS}.`}
+                    </span>
+                  )}
+                </label>
               </fieldset>
 
               <fieldset className="space-y-2">
@@ -154,8 +192,8 @@ export default function BuyCreditsModal({ onClose, onCredits }) {
                 />
               </label>
 
-              <button type="submit" className="btn-primary w-full justify-center">
-                Pay {tsh(pack.amount)}
+              <button type="submit" disabled={!pack} className="btn-primary w-full justify-center disabled:opacity-50">
+                {pack ? `Pay ${tsh(pack.amount)}` : "Choose how many credits"}
               </button>
             </form>
           ) : null}
@@ -164,7 +202,7 @@ export default function BuyCreditsModal({ onClose, onCredits }) {
             <div className="space-y-4 py-8 text-center" aria-live="polite">
               <p className="font-serif text-2xl text-navy">Check your phone</p>
               <p className="text-sm text-muted">
-                Approve the {tsh(pack.amount)} payment on your phone. This window updates by itself. Please do not close it.
+                Approve the {pack ? tsh(pack.amount) : ""} payment on your phone. This window updates by itself. Please do not close it.
               </p>
             </div>
           )}

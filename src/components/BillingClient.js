@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import BuyCreditsModal from "./BuyCreditsModal";
-import { CREDIT_PACKS, NETWORKS, tsh } from "@/lib/credit-packs";
+import { CREDIT_PACKS, MAX_CREDITS, MIN_CREDITS, NETWORKS, PRICE_PER_CREDIT, tsh } from "@/lib/credit-packs";
 
 const STATUS_LABEL = {
   pending: "Waiting for approval",
@@ -60,7 +60,10 @@ export default function BillingClient({ initialBalance, scanCost, email, purchas
             </div>
           ))}
         </div>
-        <p className="mt-4 text-xs text-muted">Accepted: {NETWORKS.map((n) => n.label).join(", ")}.</p>
+        <p className="mt-3 text-sm text-muted">
+          Need a different amount? Choose your own, from {MIN_CREDITS} to {MAX_CREDITS} credits, at {tsh(PRICE_PER_CREDIT)} per credit.
+        </p>
+        <p className="mt-2 text-xs text-muted">Accepted: {NETWORKS.map((n) => n.label).join(", ")}.</p>
       </section>
 
       <section className="card p-5 sm:p-6">

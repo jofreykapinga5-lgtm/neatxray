@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CREDITS_ENABLED } from "@/lib/credits";
-import { CREDIT_PACKS, NETWORKS } from "@/lib/credit-packs";
+import { MAX_CREDITS, MIN_CREDITS, NETWORKS, resolvePurchase } from "@/lib/credit-packs";
 import { closePurchase } from "@/lib/purchases";
 import { createMobilePayment, normalizePhone } from "@/lib/snippe";
 
@@ -16,9 +16,11 @@ export async function POST(request) {
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   if (!CREDITS_ENABLED) return NextResponse.json({ error: "Credits are not enabled." }, { status: 400 });
 
-  const { packId, provider, phone } = await request.json().catch(() => ({}));
-  const pack = CREDIT_PACKS.find((p) => p.id === packId);
-  if (!pack) return NextResponse.json({ error: "Choose a credit pack." }, { status: 400 });
+  const { packId, credits, provider, phone } = await request.json().catch(() => ({}));
+  const pack = resolvePurchase(packId, credits);
+  if (!pack) {
+    return NextResponse.json({ error: `Choose a pack, or enter between ${MIN_CREDITS} and ${MAX_CREDITS} credits.` }, { status: 400 });
+  }
   if (!NETWORKS.some((n) => n.id === provider)) return NextResponse.json({ error: "Choose a mobile money network." }, { status: 400 });
   const normalized = normalizePhone(phone);
   if (!normalized) return NextResponse.json({ error: "Enter a valid Tanzanian phone number, for example 0712 345 678." }, { status: 400 });
