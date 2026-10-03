@@ -4,6 +4,9 @@ import { ReportSchema } from "./schema";
 import { SYSTEM_PROMPT, buildUserText } from "./prompt";
 
 export const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
+// How hard the model thinks: "high" (default, most accurate), "medium" or "low" (about 30% cheaper, less specific on subtle fractures).
+const EFFORTS = ["low", "medium", "high"];
+const EFFORT = EFFORTS.includes(process.env.ANTHROPIC_EFFORT) ? process.env.ANTHROPIC_EFFORT : "high";
 
 export async function analyzeWithAnthropic({ images, notes, label, patient }) {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -20,7 +23,7 @@ export async function analyzeWithAnthropic({ images, notes, label, patient }) {
     model: MODEL,
     max_tokens: 16000,
     system: SYSTEM_PROMPT,
-    output_config: { effort: "high", format: zodOutputFormat(ReportSchema) },
+    output_config: { effort: EFFORT, format: zodOutputFormat(ReportSchema) },
     messages: [{ role: "user", content }],
   });
 
